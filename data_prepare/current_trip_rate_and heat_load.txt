@@ -1,0 +1,15 @@
+NL current:
+total energy:  1050.42586905
+number of trips in an hour:  1.56845852711
+heat_load:  2984.51180003
+
+
+
+
+
+
+SL current:
+total energy:  1046986465.0
+number of trips in an hour:  2.06954052137
+heat_load:  2980.16865274
+
