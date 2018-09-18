@@ -32,9 +32,9 @@ random.seed()
 path = savedata.folder.create('compare')
 
 # arr_color = np.array(['r', 'g', 'm', 'k'])
-rec_type = 'scale'
+rec_type = 'dev2'
 
-prob_type = 'nl'
+prob_type = 'sl'
 
 if (prob_type=='sl'):
     # path = '/home/zhanghe/PycharmProjects/LEMUpgrade_12GeV/Plot/SL/PF_reconstruct/2017_01_25__14_25_12__SL_reconstruct'
@@ -75,6 +75,8 @@ lem.c_dim = 2
 lem.c_ineq_dim = 2
 lem.trip_max = 10
 lem.energy_tol = 0.5
+if (prob_type=='sl'):
+    lem.energy_tol = 4.5
 prob = lem.lem_upgrade()
 print(prob)
 prob_dth = problem.death_penalty(prob, problem.death_penalty.method.KURI)
@@ -151,7 +153,7 @@ for idx, e in enumerate(idx_off):
 
 lem.dim += len(idx_off)
 prob = prob_fun()
-cp.compare(gradient,gradient2, path)
+cp.compare(gradient/gradient.max(),gradient2/gradient2.max(), path)
 cp.compare_max(np.asarray(prob.range_up, dtype='float64'), gradient2, path)
 cp.compare_max(np.asarray(prob.range_up, dtype='float64'), gradient, path)
 

@@ -24,11 +24,12 @@ import savedata.folder
 import savedata.record_pop as sav
 import user_problem.lem_upgrade as lem
 
-arr_off = np.array([5, 10, 15])
+arr_off = np.array([15])
+# arr_off = np.array([5, 10, 15])
 arr_color = np.array(['r', 'g', 'm', 'k'])
 rec_type = 'scale'
 
-prob_type = 'nl'
+prob_type = 'sl'
 
 if (prob_type=='sl'):
     path = '/home/zhanghe/PycharmProjects/LEMUpgrade_12GeV/Plot/SL/PF_reconstruct/2017_01_25__14_25_12__SL_reconstruct'
@@ -71,7 +72,8 @@ for n_off in arr_off:
     path_type = path+'/'+rec_type+'_'+str(n_off)
     if not (os.path.exists(path_type)):
         os.mkdir(path_type)
-    ngen = np.array([100, 200, 500, 1000, 2000, 3000])  #for nsga
+    ngen = np.array([200, 500, 1000, 2000, 3000])  #for nsga
+    # ngen = [200, 500, 1000, 2000, 3000];
     # ngen = np.array([200, 500, 1000, 2000, 3000, 4000]) #for spea2
     pop = algo.opt(pop, ngen, path_type)
 

@@ -30,7 +30,7 @@ random.seed()
 path = savedata.folder.create('nsga_II_reconstruction')
 
 # Remove the constraints using death penalty
-prob = lem.nl()
+prob = lem.sl()
 print('orignal problem:')
 print(prob)
 prob_dth = problem.death_penalty(prob, problem.death_penalty.method.KURI)
@@ -54,18 +54,18 @@ print ("Initial pop generated!")
 # plt.scatter(cur_f[0], cur_f[1], c='b', label='orginal')
 # plt.show()
 
-x = prob.trip_rate_opt()
-print prob.calc_energy(x)
-print prob.calc_heat_load(x)
-print prob.calc_number_trips(x)
-
-x = prob.adjust_gradient(x)
-print prob.calc_energy(x)
-print prob.calc_heat_load(x)
-print prob.calc_number_trips(x)
-
-
-pop.push_back(x)
+# x = prob.trip_rate_opt()
+# print prob.calc_energy(x)
+# print prob.calc_heat_load(x)
+# print prob.calc_number_trips(x)
+#
+# x = prob.adjust_gradient(x)
+# print prob.calc_energy(x)
+# print prob.calc_heat_load(x)
+# print prob.calc_number_trips(x)
+#
+#
+# pop.push_back(x)
 
 #
 # x = prob.heat_load_opt()
@@ -74,19 +74,19 @@ pop.push_back(x)
 # print prob.calc_number_trips(x)
 
 # # n_gen = [500, 1000, 2000, 5000, 10000, 30000, 100000]
-# n_gen = [3185]
-# pop = algo.opt(pop, n_gen, path)
-# sav.save_pop('pop_nsga_II_100k.sl', pop)
-# pop2 = population(prob_dth)
-# sav.load_pop('pop_nsga_II_100k.sl', pop2)
-# plt.figure()
-# cur_f = np.array([ind.cur_f for ind in pop2]).T
-# plt.scatter(cur_f[0], cur_f[1], c='b', label='NL NSGA_II 100000')
-# plt.scatter(2992, 1.59, c='r', label='NL current setting')
-# plt.legend()
-# plt.grid()
-# plt.savefig('NL_nsga_II_gen_100k.eps', format="eps")
-# plt.show()
+n_gen = [30000]
+pop = algo.opt(pop, n_gen, path)
+sav.save_pop('pop_nsga_II_30k.sl', pop)
+pop2 = population(prob_dth)
+sav.load_pop('pop_nsga_II_30k.sl', pop2)
+plt.figure()
+cur_f = np.array([ind.cur_f for ind in pop2]).T
+plt.scatter(cur_f[0], cur_f[1], c='b', label='SL NSGA_II 30000')
+# plt.scatter(2992, 1.59, c='r', label='SL current setting')
+plt.legend()
+plt.grid()
+plt.savefig('SL_nsga_II_gen_30k.eps', format="eps")
+plt.show()
 
 
 # # Compare the algorithms for efficiency

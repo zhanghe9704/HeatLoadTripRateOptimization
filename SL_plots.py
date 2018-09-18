@@ -24,6 +24,38 @@ import savedata.record_pop as sav
 import user_problem.lem_upgrade as lem
 
 
+# set global settings
+def init_plotting():
+    plt.rcParams['figure.figsize'] = (4, 4) # 1/4 of line width
+    plt.rcParams['font.size'] = 11
+    plt.rcParams['font.family'] = 'CM Sans Serif'
+    #    plt.rcParams['ps.fonttype'] = 42
+    plt.rcParams['text.usetex'] = True
+    plt.rcParams['axes.labelsize'] = plt.rcParams['font.size']
+    #    plt.rcParams['axes.titlesize'] = 1.5*plt.rcParams['font.size']
+    plt.rcParams['legend.fontsize'] = plt.rcParams['font.size']
+    plt.rcParams['xtick.labelsize'] = plt.rcParams['font.size']
+    plt.rcParams['ytick.labelsize'] = plt.rcParams['font.size']
+    plt.rcParams['savefig.dpi'] = 2 * plt.rcParams['savefig.dpi']
+    plt.rcParams['lines.markersize'] = 3
+    plt.rcParams['xtick.major.size'] = 3
+    plt.rcParams['xtick.minor.size'] = 3
+    plt.rcParams['xtick.major.width'] = 1
+    plt.rcParams['xtick.minor.width'] = 1
+    plt.rcParams['ytick.major.size'] = 3
+    plt.rcParams['ytick.minor.size'] = 3
+    plt.rcParams['ytick.major.width'] = 1
+    plt.rcParams['ytick.minor.width'] = 1
+    plt.rcParams['legend.frameon'] = False
+    plt.rcParams['legend.loc'] = 'center left'
+    plt.rcParams['legend.numpoints'] = 1
+    plt.rcParams['axes.linewidth'] = 1
+    #    plt.gca().spines['right'].set_color('none')
+    #    plt.gca().spines['top'].set_color('none')
+    plt.gca().xaxis.set_ticks_position('bottom')
+    plt.gca().yaxis.set_ticks_position('left')
+
+
 # create a folder under the current work directory to save data
 path = savedata.folder.create('plots')
 
@@ -40,13 +72,15 @@ pop_size = 128
 pop = population(prob_dth)
 
 sav.load_pop('Plot/SL/2017_01_18__20_44_14__SL_opt/pop_nsga_II_30000', pop)
-plt.figure()
+init_plotting()
+# plt.figure()
 cur_f = np.array([ind.cur_f for ind in pop]).T
-plt.scatter(cur_f[0], cur_f[1], c='b', label='SL NSGA_II 30,000')
-plt.ylim(ymin=0)
+plt.scatter(cur_f[0], cur_f[1], c='b', label='South Linac')
+plt.ylim(ymin=0, ymax=18)
 plt.xlabel('Heat load [W]')
 plt.ylabel('Trip rate [per hour]')
-plt.legend()
+plt.legend(loc="upper right")
 plt.grid()
+# plt.xticks(np.arange(2500, 2900+1, 100))
 plt.savefig(path+'/SL_nsga_II_gen_30k.eps', format="eps")
 plt.show()

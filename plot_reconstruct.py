@@ -9,6 +9,7 @@ import time
 #     import pickle
 
 from PyGMO import problem, population
+import analysis.plot_setting
 
 import optimize.nsga_II as algo
 # import optimize.nspso as algo
@@ -45,14 +46,16 @@ prob_dth = problem.death_penalty(prob, problem.death_penalty.method.KURI)
 pop_size = 128
 pop = population(prob_dth)
 
-plt.figure()
+# plt.figure()
+analysis.plot_setting.init_plotting();
 
+n_total = 200
 if (prob_type=='sl'):
     sav.load_pop('Plot/SL/2017_01_18__20_44_14__SL_opt/pop_nsga_II_30000', pop)
 elif (prob_type=='nl'):
     sav.load_pop('Plot/NL/NL_pop_nsga_II_30k.nl', pop)
 cur_f = np.array([ind.cur_f for ind in pop]).T
-plt.scatter(cur_f[0], cur_f[1], c='b', label = 'PF_all')
+plt.scatter(cur_f[0], cur_f[1], c='b', label = str(n_total)+' cavities')
 
 
 # n_off = 2
@@ -72,13 +75,14 @@ for n_off in arr_off:
     pop  = population(prob_dth)
     sav.load_pop(path+'/'+rec_type+'_'+str(n_off)+'.'+prob_type, pop)
     cur_f = np.array([ind.cur_f for ind in pop]).T
-    plt.scatter(cur_f[0][cur_f[1]<1000], cur_f[1][cur_f[1]<1000], c=arr_color[arr_off==n_off], label = str(n_off)+' cavities down')
+    plt.scatter(cur_f[0][cur_f[1]<1000], cur_f[1][cur_f[1]<1000], c=arr_color[arr_off==n_off], label = str(n_total-n_off)+' cavities')
 
 plt.ylim(ymin=0, ymax = 55)
-plt.xlim(xmin=2500)
+plt.xlim(xmin=2500, xmax=3300)
 plt.grid()
 plt.xlabel('Heat Load [W]')
 plt.ylabel('Trip Rate [per hour]')
 plt.legend(loc='upper right')
+# plt.legend()
 plt.savefig(path+'/'+prob_type+'_rec_'+rec_type+'.eps', format="eps")
 plt.show()

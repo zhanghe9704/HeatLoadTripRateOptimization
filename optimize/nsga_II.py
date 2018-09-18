@@ -10,7 +10,10 @@ from savedata.record_pop import save_pop
 
 def opt(pop, ngen, path):
     color = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+    if (isinstance(ngen, np.ndarray)):
+        ngen = ngen.tolist()
     n_gen = [0] + ngen
+    # print n_gen
     t = np.zeros(len(n_gen))
     # filename = "pop"+str(n_gen[0])
     date_str = datetime.now().strftime("%Y_%m_%d__%H_%M_%S")
