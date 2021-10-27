@@ -44,8 +44,14 @@ for i in range(df_.index.size):
         df_.iloc[i][2:] = df_.iloc[i][0:6]
         df_.iloc[i][1] = np.nan
     elif np.isnan(df_.iloc[i][5]):
-        df_.iloc[i][2:] = df_.iloc[i][1:7]
-        df_.iloc[i][1] = np.nan
+        if df_.iloc[i][1]>3: # ModeAnode is missing
+            df_.iloc[i][2:] = df_.iloc[i][1:7]
+            df_.iloc[i][1] = np.nan
+        elif df_.iloc[i][1]<4: #OpsGSetMax is missing
+            df_.iloc[i][3:] = df_.iloc[i][2:7]
+            df_.iloc[i][2] = df_.iloc[i][0]
+        # df_.iloc[i][2:] = df_.iloc[i][1:7]
+        # df_.iloc[i][1] = np.nan
     elif np.isnan(df_.iloc[i][6]):
         if df_.iloc[i][5]<100:   # MaxG, ModeAnode are missing, not TripOffset, TripSlope        
             df_.iloc[i][2:] = df_.iloc[i][0:6]
@@ -54,7 +60,7 @@ for i in range(df_.index.size):
         if df_.iloc[i][1]>3: # ModeAnode is missing
             df_.iloc[i][2:] = df_.iloc[i][1:7]
             df_.iloc[i][1] = np.nan
-        elif df_.iloc[i][1]<3: #OpsGSetMax is missing
+        elif df_.iloc[i][1]<4: #OpsGSetMax is missing
             df_.iloc[i][3:] = df_.iloc[i][2:7]
             df_.iloc[i][2] = df_.iloc[i][0]
         
@@ -79,4 +85,4 @@ cavity_length[cavity_length<160] = 0.5
 cavity_length[cavity_length>0.5] = 0.7
 df_['Length'] = pd.Series(cavity_length, index=df_.index)  
 df_ = df_.fillna(0)  
-df_.to_csv('lem_sl.csv', '\t', columns = ('MaxGSet', 'OpsGSetMax', 'PhaseRMS', 'TripOffset', 'TripSlope', 'Q0', 'Length'))
+df_.to_csv('lem_sl.csv', sep=',', columns = ('MaxGSet', 'OpsGSetMax', 'PhaseRMS', 'TripOffset', 'TripSlope', 'Q0', 'Length'))

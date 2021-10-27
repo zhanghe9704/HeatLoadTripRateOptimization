@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 
-from PyGMO import algorithm
+from pygmo import algorithm
 
 from savedata.record_pop import save_pop
 

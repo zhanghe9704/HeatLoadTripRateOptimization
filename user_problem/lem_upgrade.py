@@ -1,16 +1,19 @@
 import numpy as np
 import random
 from scipy import constants
+import csv
 
-from PyGMO.problem import base
+# from pygmo.problem import base
 
-import cavities_off
+from . import cavities_off
 
 
-class lem_upgrade(base):
-    def __init__(self):
-        super(lem_upgrade, self).__init__(dim, 0, 2, c_dim, c_ineq_dim, 0)
-        self.d2 = data[:, 1]
+# class lem_upgrade(base):
+class lem_upgrade:
+    def __init__(self, dim, c_dim, c_ineq_dim):
+    # def __init__(self):
+    #     super(lem_upgrade, self).__init__(dim, 0, 2, c_dim, c_ineq_dim, 0)
+        # self.d2 = data[:, 1]
         self.Q = data[:, 5]
         self.length = data[:, 6]
         self.trip_slope = data[:, 4]
@@ -31,7 +34,7 @@ class lem_upgrade(base):
         for idx, up in enumerate(self.range_up):
             if up < self.lowest_grad:
                 self.range_up[idx] = self.lowest_grad
-        self.set_bounds(self.range_low, self.range_up)
+        # self.set_bounds(self.range_low, self.range_up)
         self.number_trips = 0
         self.trip_max = trip_max
         self.c_dim = c_dim
@@ -39,19 +42,8 @@ class lem_upgrade(base):
         self.heat_max = heat_max
         self.heat_load = 0
         self.A = -10.26813067
-
-    # Define the objective function
-    def _objfun_impl(self, xx):
-        # x = np.asarray(xx)
-        # fault = self.trip_slope * (x - self.fault_grad)
-        # fault_rate = np.sum(np.exp(-10.26813067 + fault[self.trip_slope > 0]))
-        # number_trips = 3600.0 * fault_rate
-        # self.number_trips = number_trips
-        # heat_load = np.sum(1e12 * (x * x) * self.length / (self.Q * self.cnst))
-        return self.heat_load, self.number_trips,
-
-    # Define the constraint functions
-    def _compute_constraints_impl(self, xx):
+        
+    def fitness(self, xx):
         x = np.array(xx)
         diff_energy = np.fabs(np.sum(self.length * x) - self.energy)
         fault = self.trip_slope * (x - self.fault_grad)
@@ -60,16 +52,59 @@ class lem_upgrade(base):
         self.number_trips = number_trips
         heat_load = np.sum(1e12 * (x * x) * self.length / (self.Q * self.cnst))
         self.heat_load = heat_load
-        constr = ()
+        obj = [self.heat_load, self.number_trips]
+        ci = []
         if c_dim == 1:
-            constr = constr + (diff_energy - self.energy_tol,)
+            ci = [diff_energy - self.energy_tol]
         elif c_dim == 2:
-            constr = constr + (diff_energy - self.energy_tol, self.number_trips - self.trip_max,)
+            ci = [diff_energy - self.energy_tol, self.number_trips - self.trip_max]
         elif c_dim == 3:
-            constr = constr + (diff_energy - self.energy_tol, self.number_trips - self.trip_max, self.heat_load - self.heat_max)
+            ci = [diff_energy - self.energy_tol, self.number_trips - self.trip_max, self.heat_load - self.heat_max]
         else:
             print("Warning: Constraint number should be ONE, TWO, or THREE!")
-        return constr
+        return obj + ci
+
+    def get_nobj(self):
+        return 2
+    
+    def get_bounds(self):
+        return (self.range_low, self.range_up)
+    
+    def get_nic(self):
+        return c_ineq_dim
+    
+    def get_nec(self):
+        return c_dim - c_ineq_dim
+    # # Define the objective function
+    # def _objfun_impl(self, xx):
+    #     # x = np.asarray(xx)
+    #     # fault = self.trip_slope * (x - self.fault_grad)
+    #     # fault_rate = np.sum(np.exp(-10.26813067 + fault[self.trip_slope > 0]))
+    #     # number_trips = 3600.0 * fault_rate
+    #     # self.number_trips = number_trips
+    #     # heat_load = np.sum(1e12 * (x * x) * self.length / (self.Q * self.cnst))
+    #     return self.heat_load, self.number_trips,
+
+    # # Define the constraint functions
+    # def _compute_constraints_impl(self, xx):
+    #     x = np.array(xx)
+    #     diff_energy = np.fabs(np.sum(self.length * x) - self.energy)
+    #     fault = self.trip_slope * (x - self.fault_grad)
+    #     fault_rate = np.sum(np.exp(self.A + fault[self.trip_slope > 0]))
+    #     number_trips = 3600.0 * fault_rate
+    #     self.number_trips = number_trips
+    #     heat_load = np.sum(1e12 * (x * x) * self.length / (self.Q * self.cnst))
+    #     self.heat_load = heat_load
+    #     constr = ()
+    #     if c_dim == 1:
+    #         constr = constr + (diff_energy - self.energy_tol,)
+    #     elif c_dim == 2:
+    #         constr = constr + (diff_energy - self.energy_tol, self.number_trips - self.trip_max,)
+    #     elif c_dim == 3:
+    #         constr = constr + (diff_energy - self.energy_tol, self.number_trips - self.trip_max, self.heat_load - self.heat_max)
+    #     else:
+    #         print("Warning: Constraint number should be ONE, TWO, or THREE!")
+    #     return constr
 
         # return diff_energy - 2, self.number_trips - self.trip_max
         # return diff_energy - 2,
@@ -309,9 +344,11 @@ def nl():
     global data
     global lines
     filename = 'lem_nl.csv'
-    lines = np.loadtxt(filename, dtype='str', skiprows=1)  # load data as string, first row is the cavity name
+    # lines = np.loadtxt(filename, dtype='str', skiprows=1)  # load data as string, first row is the cavity name
+    lines = np.loadtxt(filename, dtype='str', delimiter=',', skiprows=1)  # load data as string, first row is the cavity name
     data = lines[:, 1:8].astype('float64')
-    nl = lem_upgrade()
+    # nl = lem_upgrade()
+    nl = lem_upgrade(dim, c_dim, c_ineq_dim)
     return nl
 
 
@@ -319,9 +356,11 @@ def sl():
     global data
     global lines
     filename = 'lem_sl.csv'
-    lines = np.loadtxt(filename, dtype='str', skiprows=1)  # load data as string, first row is the cavity name
+    # lines = np.loadtxt(filename, dtype='str', skiprows=1)  # load data as string, first row is the cavity name
+    lines = np.loadtxt(filename, dtype='str', delimiter=',', skiprows=1)  # load data as string, first row is the cavity name
     data = lines[:, 1:8].astype('float64')
-    sl = lem_upgrade()
+    # sl = lem_upgrade()
+    sl = lem_upgrade(dim, c_dim, c_ineq_dim)
     return sl
 
 # filename = ""

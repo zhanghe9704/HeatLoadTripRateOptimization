@@ -8,7 +8,7 @@ import time
 # except ImportError:
 #     import pickle
 
-from PyGMO import problem, population
+from pygmo import problem, population, unconstrain
 
 import optimize.nsga_II as algo
 # import optimize.nspso as algo
@@ -30,10 +30,12 @@ random.seed()
 path = savedata.folder.create('nsga_II_reconstruction')
 
 # Remove the constraints using death penalty
-prob = lem.sl()
+lem_prob = lem.sl()
+prob = problem(lem_prob)
 print('orignal problem:')
 print(prob)
-prob_dth = problem.death_penalty(prob, problem.death_penalty.method.KURI)
+# prob_dth = problem.death_penalty(prob, problem.death_penalty.method.KURI)
+prob_dth = unconstrain(prob, method='kuri')  #'death penalty','kuri', 'weighted', 'ignore_c', 'ignore_o'
 print('death penalty removed:')
 print(prob_dth)
 #
@@ -43,9 +45,23 @@ pop = population(prob_dth)
 dim = lem.dim
 x = np.empty(dim)
 for _ in range(pop_size):
-   prob.create_pop(x)
-   pop.push_back(x)
+    lem_prob.create_pop(x)
+    pop.push_back(x)
 print ("Initial pop generated!")
+
+f = pop.get_f()
+f0 = []
+f1 = []
+for e in f:
+    f0.append(e[0])
+    f1.append(e[1])
+plt.figure()
+plt.scatter(f0, f1, c='b', label='SL Initial Pop')
+plt.legend()
+plt.grid()
+plt.savefig('SL_nsga_II_gen_ip.eps', format="eps")
+plt.show()
+print("Initial pop plotted!")
 
 
 # # Plot the initial population.
@@ -80,9 +96,17 @@ sav.save_pop('pop_nsga_II_30k.sl', pop)
 pop2 = population(prob_dth)
 sav.load_pop('pop_nsga_II_30k.sl', pop2)
 plt.figure()
-cur_f = np.array([ind.cur_f for ind in pop2]).T
-plt.scatter(cur_f[0], cur_f[1], c='b', label='SL NSGA_II 30000')
+# cur_f = np.array([ind.cur_f for ind in pop2]).T
+# plt.scatter(cur_f[0], cur_f[1], c='b', label='SL NSGA_II 30000')
 # plt.scatter(2992, 1.59, c='r', label='SL current setting')
+
+f = pop2.get_f()
+f0 = []
+f1 = []
+for e in f:
+    f0.append(e[0])
+    f1.append(e[1])
+plt.scatter(f0, f1, c='b', label='SL NSGA_II 30000')
 plt.legend()
 plt.grid()
 plt.savefig('SL_nsga_II_gen_30k.eps', format="eps")

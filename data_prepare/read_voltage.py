@@ -32,6 +32,6 @@ fault_rate = np.sum(np.exp(-10.26813067 + fault[trip_slope > 0]))
 number_trips = 3600.0 * fault_rate
 heat_load = np.sum(1e12 * (gradient * gradient) * length / (Q * cnst))
 
-print 'total energy: ', voltage.sum()
-print 'number of trips in an hour: ', number_trips
-print 'heat_load: ', heat_load
+print ('total energy: ', voltage.sum())
+print ('number of trips in an hour: ', number_trips)
+print ('heat_load: ', heat_load)
