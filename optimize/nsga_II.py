@@ -54,5 +54,5 @@ def opt(pop, ngen, path):
     plt.ylabel("Trip Rate [per hour]")
     plt.xlabel("Heat Load [W]")
     plt.savefig(path+'/'+'nsga_II_'+date_str+'.eps', format="eps")
-    # plt.show()
+    plt.show()
     return pop

@@ -75,39 +75,10 @@ class lem_upgrade:
     
     def get_nec(self):
         return c_dim - c_ineq_dim
-    # # Define the objective function
-    # def _objfun_impl(self, xx):
-    #     # x = np.asarray(xx)
-    #     # fault = self.trip_slope * (x - self.fault_grad)
-    #     # fault_rate = np.sum(np.exp(-10.26813067 + fault[self.trip_slope > 0]))
-    #     # number_trips = 3600.0 * fault_rate
-    #     # self.number_trips = number_trips
-    #     # heat_load = np.sum(1e12 * (x * x) * self.length / (self.Q * self.cnst))
-    #     return self.heat_load, self.number_trips,
-
-    # # Define the constraint functions
-    # def _compute_constraints_impl(self, xx):
-    #     x = np.array(xx)
-    #     diff_energy = np.fabs(np.sum(self.length * x) - self.energy)
-    #     fault = self.trip_slope * (x - self.fault_grad)
-    #     fault_rate = np.sum(np.exp(self.A + fault[self.trip_slope > 0]))
-    #     number_trips = 3600.0 * fault_rate
-    #     self.number_trips = number_trips
-    #     heat_load = np.sum(1e12 * (x * x) * self.length / (self.Q * self.cnst))
-    #     self.heat_load = heat_load
-    #     constr = ()
-    #     if c_dim == 1:
-    #         constr = constr + (diff_energy - self.energy_tol,)
-    #     elif c_dim == 2:
-    #         constr = constr + (diff_energy - self.energy_tol, self.number_trips - self.trip_max,)
-    #     elif c_dim == 3:
-    #         constr = constr + (diff_energy - self.energy_tol, self.number_trips - self.trip_max, self.heat_load - self.heat_max)
-    #     else:
-    #         print("Warning: Constraint number should be ONE, TWO, or THREE!")
-    #     return constr
-
-        # return diff_energy - 2, self.number_trips - self.trip_max
-        # return diff_energy - 2,
+    
+    def get_nc(self):
+        return c_dim
+    
     def calc_number_trips(self, xx):
         x = np.array(xx)
         diff_energy = np.fabs(np.sum(self.length * x) - self.energy)
@@ -124,18 +95,14 @@ class lem_upgrade:
     def calc_energy(self, xx):
         x = np.array(xx)
         return  np.sum(self.length * x)
+    
+    def n_cavity(self):
+        return self.Q.size
 
-    def trip_rate_opt(self):
-        x = self.range_up * 1
-        idx = self.trip_slope>0
-        lb = self.length[idx]/self.trip_slope[idx]
-        lb_sum = np.sum(lb)
-        dE = self.energy - np.sum(x[np.logical_not(idx)]*self.length[np.logical_not(idx)])
-        lm = np.exp((dE - np.sum(lb*np.log(lb/3600.0)) + self.A * lb_sum - np.sum(self.fault_grad[idx]*self.length[idx]))/lb_sum)
-        x[idx] = (np.log(lm*lb/3600.0) - self.A)/self.trip_slope[idx] + self.fault_grad[idx]
-        return  x
+    def __len__(self):
+        return self.Q.size
 
-    def trip_rate_opt(self, delta_E):
+    def trip_rate_opt(self, delta_E = 0):
         x = self.range_up * 1
         idx = self.trip_slope>0
         lb = self.length[idx]/self.trip_slope[idx]
@@ -202,7 +169,7 @@ class lem_upgrade:
                             x[i] = self.range_low[i] #* (1 + 1e-6)
             current_energy = np.sum(self.length * x)
 
-    def recreate_pop2(self, x):
+    def recreate_pop_dpdg(self, x):
         current_energy = np.sum(self.length * x)
         while (np.fabs(current_energy - self.energy) > self.energy_tol):
             energy_change = self.energy - current_energy
@@ -219,7 +186,7 @@ class lem_upgrade:
                     x[i] = self.range_low[i] * (1 + 1e-6)
             current_energy = np.sum(self.length * x)
 
-    def recreate_pop3(self, x):
+    def recreate_pop_dpdg_sqr(self, x):
         current_energy = np.sum(self.length * x)
         while (np.fabs(current_energy - self.energy) > self.energy_tol):
             energy_change = self.energy - current_energy
@@ -236,62 +203,8 @@ class lem_upgrade:
                     x[i] = self.range_low[i] * (1 + 1e-6)
             current_energy = np.sum(self.length * x)
 
-    # def recreate_pop3(self, x):
-    #     current_energy = np.sum(self.length * x)
-    #     while np.fabs(current_energy - self.energy) > 2:
-    #         energy_change = self.energy - current_energy
-    #         coef_g = (self.cnst * self.Q) / (self.length * x)
-    #         # coef_g = np.abs(coef_g)
-    #         coef_h = coef_g * coef_g
-    #         coef_t = 1 / coef_h
-    #         k = 0.9
-    #         kt = k * energy_change / np.sum(coef_h * self.length)
-    #         kh = (1-k) * energy_change / np.sum(coef_h * self.length)
-    #         for i, xi in enumerate(x):
-    #             x[i] += coef_t[i]*kt + coef_h[i]*kh
-    #             if x[i] > self.range_up[i]:
-    #                 x[i] = self.range_up[i] * (1 - 1e-6)
-    #             elif x[i] < self.range_low[i]:
-    #                 x[i] = self.range_low[i] * (1 + 1e-6)
-    #         current_energy = np.sum(self.length * x)
 
-    def recreate_pop4(self, x):
-        current_energy = np.sum(self.length * x)
-        while (np.fabs(current_energy - self.energy) > self.energy_tol):
-            energy_change = self.energy - current_energy
-            coef_g = (self.cnst*self.Q) / (self.length*x)
-            # coef_g = np.abs(coef_g)
-            # coef_g = coef_g*coef_g
-            coef_g = coef_g * coef_g
-            coef_g = 1/coef_g
-            k = energy_change / np.sum(coef_g*self.length)
-            for i, xi in enumerate(x):
-                x[i] += coef_g[i]*k
-                if (x[i] > self.range_up[i]):
-                    x[i] = self.range_up[i] * (1 - 1e-6)
-                elif (x[i] < self.range_low[i]):
-                    x[i] = self.range_low[i] * (1 + 1e-6)
-            current_energy = np.sum(self.length * x)
-
-    def recreate_pop5(self, x):
-        current_energy = np.sum(self.length * x)
-        while (np.fabs(current_energy - self.energy) > self.energy_tol):
-            energy_change = self.energy - current_energy
-            coef_g = (self.cnst*self.Q) / (self.length*x)
-            coef_g = np.abs(coef_g)
-            # coef_g = coef_g*coef_g
-            # coef_g = coef_g * coef_g
-            coef_g = 1/coef_g
-            k = energy_change / np.sum(coef_g*self.length)
-            for i, xi in enumerate(x):
-                x[i] += coef_g[i]*k
-                if (x[i] > self.range_up[i]):
-                    x[i] = self.range_up[i] * (1 - 1e-6)
-                elif (x[i] < self.range_low[i]):
-                    x[i] = self.range_low[i] * (1 + 1e-6)
-            current_energy = np.sum(self.length * x)
-
-    def recreate_pop6(self, x):
+    def recreate_pop_dpdq_sort(self, x):
         current_energy = np.sum(self.length * x)
         energy_diff = np.fabs(current_energy - self.energy)
         coef_g = (self.cnst * self.Q) / (self.length * x)
@@ -307,13 +220,11 @@ class lem_upgrade:
                 x[index[i]] += energy_inc/self.length[index[i]]
             energy_diff -= energy_inc
             i += 1
-    def recreate_pop7(self, x):
+    def recreate_pop_dpdq_cute(self, x):
         current_energy = np.sum(self.length * x)
         while (np.fabs(current_energy - self.energy) > self.energy_tol):
             energy_change = self.energy - current_energy
             coef_g = (self.cnst*self.Q) / (self.length*x)
-            # coef_g = np.abs(coef_g)
-            # coef_g = coef_g*coef_g
             coef_g = coef_g * coef_g * coef_g
             coef_g = 1/coef_g
             k = energy_change / np.sum(coef_g*self.length)
@@ -329,7 +240,7 @@ class lem_upgrade:
         x = np.array(xx)
         x[x>self.range_up] = self.range_up[x>self.range_up] * (1 - 1e-6)
         x[x<self.range_low] = self.range_low[x<self.range_low]  * (1 + 1e-6)
-        self.recreate_pop4(x)
+        self.recreate_pop_dpdg_sqr(x)
         return x.tolist()
 
 
@@ -337,7 +248,7 @@ def revise_problem(n_off):
     global dim
     global data
     (dim, data, id_down) = cavities_off.remove(dim, data, n_off)
-    return lem_upgrade(), id_down
+    return lem_upgrade(dim, c_dim, c_ineq_dim), id_down
 
 
 def nl():
