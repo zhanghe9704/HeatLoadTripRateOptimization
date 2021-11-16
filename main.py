@@ -25,7 +25,7 @@ import user_problem.lem_upgrade as lem
 
 # # Choose the linac here
 linac = 'NL' ## 'NL' or 'SL'
-random.seed(22)
+random.seed()
 # plt.interactive(False)
 
 # create a folder under the current work directory to save data
