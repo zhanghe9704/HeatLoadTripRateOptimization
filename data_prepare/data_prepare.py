@@ -10,10 +10,12 @@ import pandas as pd
 import re
 from itertools import compress
 
+# # Choose the linac here.
+linac = 'NL'  ## 'NL' or 'SL'
 
 cavity = []
 pattern = re.compile(r'\dL\d{2}-\d')
-filename = 'SLparameters' 
+filename = linac+'parameters'  
 with open(filename, "r") as ins:
     for line in ins:
         match = pattern.match(line)
@@ -85,4 +87,4 @@ cavity_length[cavity_length<160] = 0.5
 cavity_length[cavity_length>0.5] = 0.7
 df_['Length'] = pd.Series(cavity_length, index=df_.index)  
 df_ = df_.fillna(0)  
-df_.to_csv('lem_sl.csv', sep=',', columns = ('MaxGSet', 'OpsGSetMax', 'PhaseRMS', 'TripOffset', 'TripSlope', 'Q0', 'Length'))
+df_.to_csv('lem_'+linac.lower()+'.csv', sep=',', columns = ('MaxGSet', 'OpsGSetMax', 'PhaseRMS', 'TripOffset', 'TripSlope', 'Q0', 'Length'))

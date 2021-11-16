@@ -23,7 +23,8 @@ import savedata.folder
 import savedata.record_pop as sav
 import user_problem.lem_upgrade as lem
 
-
+# # Choose the linac here
+linac = 'NL' ## 'NL' or 'SL'
 random.seed(22)
 # plt.interactive(False)
 
@@ -31,7 +32,10 @@ random.seed(22)
 path = savedata.folder.create('nsga_II_reconstruction')
 
 # Remove the constraints using death penalty
-lem_prob = lem.sl()
+if linac.upper() == 'SL':
+    lem_prob = lem.sl()
+elif linac.upper() == 'NL':
+    lem_prob = lem.nl()
 prob = problem(lem_prob)
 print('orignal problem:')
 print(prob)
@@ -46,7 +50,7 @@ pop = population(prob_dth)
 dim = lem.dim
 x = np.empty(dim)
 for _ in range(pop_size):
-    lem_prob.create_pop(x)
+    lem_prob.create_pop_w_constr(x)
     pop.push_back(x)
 print ("Initial pop generated!")
 
@@ -57,10 +61,10 @@ for e in f:
     f0.append(e[0])
     f1.append(e[1])
 plt.figure()
-plt.scatter(f0, f1, c='b', label='SL Initial Pop')
+plt.scatter(f0, f1, c='b', label=linac.upper()+' Initial Pop')
 plt.legend()
 plt.grid()
-plt.savefig('SL_nsga_II_gen_ip.eps', format="eps")
+plt.savefig(linac.upper()+'_nsga_II_gen_ip.eps', format="eps")
 plt.show()
 print("Initial pop plotted!")
 
@@ -83,27 +87,27 @@ print("Initial pop plotted!")
 # print(lem_prob.calc_heat_load(x))
 # print(lem_prob.calc_number_trips(x))
 
-# # # Run the optimizer for 30k generations and save the result
-# n_gen = [30000]
-# pop = algo.opt(pop, n_gen, path)
-# sav.save_pop('pop_nsga_II_30k.sl', pop)
+# # Run the optimizer for 30k generations and save the result
+n_gen = [30000]
+pop = algo.opt(pop, n_gen, path)
+sav.save_pop('pop_nsga_II_30k.'+linac.lower(), pop)
 
-# # # Load the saved result and plot
-# pop2 = population(prob_dth)
-# sav.load_pop('pop_nsga_II_30k.sl', pop2)
-# plt.figure()
+# # Load the saved result and plot
+pop2 = population(prob_dth)
+sav.load_pop('pop_nsga_II_30k.'+linac.lower(), pop2)
+plt.figure()
 
-# f = pop2.get_f()
-# f0 = []
-# f1 = []
-# for e in f:
-#     f0.append(e[0])
-#     f1.append(e[1])
-# plt.scatter(f0, f1, c='b', label='SL NSGA_II 30000')
-# plt.legend()
-# plt.grid()
-# plt.savefig('SL_nsga_II_gen_30k.eps', format="eps")
-# plt.show()
+f = pop2.get_f()
+f0 = []
+f1 = []
+for e in f:
+    f0.append(e[0])
+    f1.append(e[1])
+plt.scatter(f0, f1, c='b', label=linac.upper()+' NSGA_II 30000')
+plt.legend()
+plt.grid()
+plt.savefig(linac.upper()+'_nsga_II_gen_30k.eps', format="eps")
+plt.show()
 
 
 # # Turn off a few cavities and reconstruct the pareto_front
@@ -119,7 +123,7 @@ print(prob_dth_new)
 
 # # Load previous result for the original problem
 pop_org = population(prob_dth)
-sav.load_pop('pop_nsga_II_30k.sl', pop_org)
+sav.load_pop('pop_nsga_II_30k.'+linac.lower(), pop_org)
 # # Delete the off cavities and use as initial population for the new problem
 pop_new = population(prob_dth_new)
 for ind in pop_org.get_x():

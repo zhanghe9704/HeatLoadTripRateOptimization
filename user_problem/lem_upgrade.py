@@ -137,6 +137,16 @@ class lem_upgrade:
                         x[i] = self.range_low[i] * (1 + 1e-6)
             current_energy = np.sum(self.length * x)
 
+    def create_pop_w_constr(self, x): 
+        self.create_pop(x)
+        if self.c_dim == 2:
+            while self.calc_number_trips(x)>self.trip_max:
+                self.create_pop(x)
+        elif self.c_dim == 3:
+            while self.calc_number_trips(x)>self.trip_max and self.calc_heat_load(x)>self.heat_max:
+                self.create_pop(x)
+            
+        
     def recreate_pop(self, x, idx=-1):
         if (idx >= 0):
             if (x[idx] > self.range_low[idx]):
