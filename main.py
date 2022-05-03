@@ -3,10 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import time
-# try:
-#     import cPickle as pickle
-# except ImportError:
-#     import pickle
+import sys
+import pandas as pd
 
 from pygmo import problem, population, unconstrain
 
@@ -24,18 +22,27 @@ import savedata.record_pop as sav
 import user_problem.lem_upgrade as lem
 
 # # Choose the linac here
-linac = 'NL' ## 'NL' or 'SL'
+linac = 'SL' ## 'NL' or 'SL'
 random.seed()
 # plt.interactive(False)
 
 # create a folder under the current work directory to save data
 path = savedata.folder.create('nsga_II_reconstruction')
 
+# cavity table file
+file = 'data_prepare\\cebaf_cavity_table\\cavity_table.pkl'
+cavities = pd.read_pickle(file)
+
 # Remove the constraints using death penalty
 if linac.upper() == 'SL':
-    lem_prob = lem.sl()
+    # lem_prob = lem.sl()
+    sl = cavities[cavities['cavity_id'].str.contains('2L')]
+    lem_prob = lem.prbl(sl)
 elif linac.upper() == 'NL':
-    lem_prob = lem.nl()
+    # lem_prob = lem.nl()
+    nl = cavities[cavities['cavity_id'].str.contains('1L')]
+    lem_prob = lem.prbl(nl)
+    
 prob = problem(lem_prob)
 print('orignal problem:')
 print(prob)
@@ -109,6 +116,8 @@ plt.grid()
 plt.savefig(linac.upper()+'_nsga_II_gen_30k.eps', format="eps")
 plt.show()
 
+
+# sys.exit()
 
 # # Turn off a few cavities and reconstruct the pareto_front
 n_off = 5

@@ -43,6 +43,42 @@ class lem_upgrade:
         self.heat_load = 0
         self.A = -10.26813067
         
+    def __init__(self, dim, c_dim, c_ineq_dim, cavities):
+    # def __init__(self):
+    #     super(lem_upgrade, self).__init__(dim, 0, 2, c_dim, c_ineq_dim, 0)
+        # self.d2 = data[:, 1]
+        self.Q = cavities['Q0'].values
+        self.length = cavities['length'].values
+        self.trip_slope = cavities['trip_slope'].values
+        self.fault_grad = cavities['trip_offset'].values
+        self.lowest_grad = 3.0 - 1e-5
+        self.energy = total_energy
+        self.cnst = cavities['shunt_impedance'].values
+        # Set bounds
+        self.range_low = np.empty(dim)
+        self.range_low.fill(self.lowest_grad)
+        
+        # Use ops_gset_max for the uppler limits of the gradients
+        # When ops_gset_max gives a nan, use the max_gset value.
+        up =  cavities['ops_gset_max'].copy(deep=True)
+        up[up.isna()] = cavities.max_gset[cavities.ops_gset_max.isna()]
+        self.range_up = up.values
+        self.energy_tol =energy_tol
+        # self.length[self.length == 0.5] = constants.c/1.497e9*2.5
+        # self.length[self.length > 0.6] = constants.c/1.497e9*3.5
+
+        for idx, up in enumerate(self.range_up):
+            if up < self.lowest_grad:
+                self.range_up[idx] = self.lowest_grad
+        # self.set_bounds(self.range_low, self.range_up)
+        self.number_trips = 0
+        self.trip_max = trip_max
+        self.c_dim = c_dim
+        self.c_ineq_dim = c_ineq_dim
+        self.heat_max = heat_max
+        self.heat_load = 0
+        self.A = -10.26813067
+        
     def fitness(self, xx):
         x = np.array(xx)
         diff_energy = np.fabs(np.sum(self.length * x) - self.energy)
@@ -283,6 +319,10 @@ def sl():
     # sl = lem_upgrade()
     sl = lem_upgrade(dim, c_dim, c_ineq_dim)
     return sl
+
+def prbl(cav):
+    prbl = lem_upgrade(dim, c_dim, c_ineq_dim, cav)
+    return prbl
 
 # filename = ""
 total_energy = 1050
