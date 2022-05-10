@@ -20,9 +20,10 @@ import optimize.nsga_II as algo
 import savedata.folder
 import savedata.record_pop as sav
 import user_problem.lem_upgrade as lem
+import user_problem.cebaf_dt_v0 as cav
 
 # # Choose the linac here
-linac = 'SL' ## 'NL' or 'SL'
+linac = 'North' ## 'South' or 'North'
 random.seed()
 # plt.interactive(False)
 
@@ -31,17 +32,22 @@ path = savedata.folder.create('nsga_II_reconstruction')
 
 # cavity table file
 file = 'data_prepare\\cebaf_cavity_table\\cavity_table.pkl'
-cavities = pd.read_pickle(file)
 
-# Remove the constraints using death penalty
-if linac.upper() == 'SL':
-    # lem_prob = lem.sl()
-    sl = cavities[cavities['cavity_id'].str.contains('2L')]
-    lem_prob = lem.prbl(sl)
-elif linac.upper() == 'NL':
-    # lem_prob = lem.nl()
-    nl = cavities[cavities['cavity_id'].str.contains('1L')]
-    lem_prob = lem.prbl(nl)
+# cavities = pd.read_pickle(file)
+# # Remove the constraints using death penalty
+# if linac.upper() == 'SOUTH':
+#     # lem_prob = lem.sl()
+#     sl = cavities[cavities['cavity_id'].str.contains('2L')]
+#     lem_prob = lem.prbl(sl)
+# elif linac.upper() == 'NORTH':
+#     # lem_prob = lem.nl()
+#     nl = cavities[cavities['cavity_id'].str.contains('1L')]
+#     lem_prob = lem.prbl(nl)
+
+    
+cavities = cav.digitalTwin(file, linac)
+lem_prob = lem.prbl(cavities)
+
     
 prob = problem(lem_prob)
 print('orignal problem:')
@@ -117,7 +123,7 @@ plt.savefig(linac.upper()+'_nsga_II_gen_30k.eps', format="eps")
 plt.show()
 
 
-# sys.exit()
+sys.exit()
 
 # # Turn off a few cavities and reconstruct the pareto_front
 n_off = 5

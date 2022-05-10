@@ -113,8 +113,37 @@ class cavity():
             return 0
         return math.exp(-10.268+self.trip_slope*(self.gradient - self.trip_offset))
 
-    def getGradient(self):
+    def getGradient(self):     
         return self.gradient
+            
+    def getValue(self, name):
+        if name == 'cavity_id':
+            return self.cavity_id
+        elif name == 'length':
+            return self.length
+        elif name == 'type':
+            return self.type
+        elif name == 'Q0':
+            return self.Q0
+        elif name == 'trip_slope':
+            return self.trip_slope
+        elif name == 'trip_offset':
+            return self.trip_offset
+        elif name == 'shunt_impedence':
+            return self.shunt
+        elif name == 'max_gset':
+            return self.max_gset
+        elif name == 'ops_gset_max':
+            return self.ops_gset_max
+        elif name == 'max_gset_to_use':
+            return self.max_gset_to_use
+        elif name == 'min_gset':
+            return self.min_gset
+        elif name == 'gradient':
+            return self.gradient
+        else:
+            print('Cavity does not have ', name, ' !')
+            return np.nan
 
     def getEnergy(self):
         return self.length * self.gradient
@@ -158,7 +187,7 @@ class digitalTwin():
         self.name = linac
 
         if linac.lower() in ["north", "n", "south", "s"]:
-            self.energyConstraint = 1150
+            self.energyConstraint = 1050
             self.energyMargin = 2
         elif linac.lower() == "test":
             self.energyConstraint = 31.85
@@ -279,6 +308,17 @@ class digitalTwin():
         for cavity in self.cavities:
             c.append(cavity.chargeFraction)
         print(c)
+        
+    def getValues(self, name):
+        """
+
+        :return:
+        """
+        values = []
+        for cavity in self.cavities:
+            values.append(cavity.getValue(name))
+        return np.array(values)
+
 
 class cebaf_env_v0(gym.Env):
     def __init__(self, path_cavity_data, linac="North", trackTime=False, max_steps=100):
