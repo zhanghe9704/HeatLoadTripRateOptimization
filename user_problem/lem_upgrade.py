@@ -10,7 +10,7 @@ from . import cavities_off
 
 # class lem_upgrade(base):
 class lem_upgrade:
-    def __init__(self, dim, c_dim, c_ineq_dim):
+    def __init__(self, dim, c_dim, c_ineq_dim, total_energy = 1050, energy_tol = 2):
     # def __init__(self):
     #     super(lem_upgrade, self).__init__(dim, 0, 2, c_dim, c_ineq_dim, 0)
         # self.d2 = data[:, 1]
@@ -357,7 +357,7 @@ def sl():
     return sl
 
 def prbl(cav):
-    prbl = lem_upgrade(dim, c_dim, c_ineq_dim, cav)
+    prbl = lem_upgrade(cav.getTotalCavityNumber(), c_dim, c_ineq_dim, cav)
     return prbl
 
 # filename = ""

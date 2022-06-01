@@ -318,6 +318,36 @@ class digitalTwin():
         for cavity in self.cavities:
             values.append(cavity.getValue(name))
         return np.array(values)
+    
+    def getTotalCavityNumber(self):
+        return len(self.cavity_order)
+    
+    def getName(self):
+        return self.name
+
+class cryoModule(digitalTwin):
+    def __init__(self, path_cavity_data, cryomodule, energy_constraint, energy_margin):
+        """
+
+        :param path_cavity_data:
+        :param cryo_module:
+        :param energy_constraint:
+        :param energy_margin:
+            
+        """
+        data = pd.read_pickle(path_cavity_data)
+        module = data[data['cavity_id'].str.contains(cryomodule)]
+        if module.empty:
+            raise ValueError("Cryomodule not found!")
+        cavity_ids = module["cavity_id"]
+        self.cavities = []
+        self.cavity_order = []
+        for i in range(len(cavity_ids)):
+            self.cavity_order.append(cavity_ids.iloc[i])
+            self.cavities.append(cavity(data, cavity_ids.iloc[i]))
+        self.name = cryomodule
+        self.energyConstraint = energy_constraint
+        self.energyMargin = energy_margin
 
 
 class cebaf_env_v0(gym.Env):

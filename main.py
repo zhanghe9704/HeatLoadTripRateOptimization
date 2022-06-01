@@ -44,8 +44,16 @@ file = 'data_prepare\\cebaf_cavity_table\\cavity_table.pkl'
 #     nl = cavities[cavities['cavity_id'].str.contains('1L')]
 #     lem_prob = lem.prbl(nl)
 
-    
-cavities = cav.digitalTwin(file, linac)
+
+## Define the digitial twin    
+#cavities = cav.digitalTwin(file, linac)
+
+# Define the cryomodule
+cryomodule = '1L06'
+energy_constraint = 31.8
+energy_margin = 0.2
+cavities = cav.cryoModule(file, cryomodule, energy_constraint, energy_margin)
+
 lem_prob = lem.prbl(cavities)
 
     
@@ -60,7 +68,7 @@ print(prob_dth)
 # Create original population
 pop_size = 128
 pop = population(prob_dth)
-dim = lem.dim
+dim = prob.get_nx()
 x = np.empty(dim)
 for _ in range(pop_size):
     lem_prob.create_pop_w_constr(x)
@@ -74,10 +82,10 @@ for e in f:
     f0.append(e[0])
     f1.append(e[1])
 plt.figure()
-plt.scatter(f0, f1, c='b', label=linac.upper()+' Initial Pop')
+plt.scatter(f0, f1, c='b', label=cavities.getName().upper()+' Initial Pop')
 plt.legend()
 plt.grid()
-plt.savefig(linac.upper()+'_nsga_II_gen_ip.eps', format="eps")
+plt.savefig(cavities.getName().upper()+'_nsga_II_gen_ip.eps', format="eps")
 plt.show()
 print("Initial pop plotted!")
 
@@ -103,11 +111,11 @@ print("Initial pop plotted!")
 # # Run the optimizer for 30k generations and save the result
 n_gen = [30000]
 pop = algo.opt(pop, n_gen, path)
-sav.save_pop('pop_nsga_II_30k.'+linac.lower(), pop)
+sav.save_pop('pop_nsga_II_30k.'+cavities.getName().lower(), pop)
 
 # # Load the saved result and plot
 pop2 = population(prob_dth)
-sav.load_pop('pop_nsga_II_30k.'+linac.lower(), pop2)
+sav.load_pop('pop_nsga_II_30k.'+cavities.getName().lower(), pop2)
 plt.figure()
 
 f = pop2.get_f()
@@ -116,10 +124,10 @@ f1 = []
 for e in f:
     f0.append(e[0])
     f1.append(e[1])
-plt.scatter(f0, f1, c='b', label=linac.upper()+' NSGA_II 30000')
+plt.scatter(f0, f1, c='b', label=cavities.getName().upper()+' NSGA_II 30000')
 plt.legend()
 plt.grid()
-plt.savefig(linac.upper()+'_nsga_II_gen_30k.eps', format="eps")
+plt.savefig(cavities.getName().upper()+'_nsga_II_gen_30k.eps', format="eps")
 plt.show()
 
 
