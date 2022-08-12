@@ -20,18 +20,20 @@ import optimize.nsga_II as algo
 import savedata.folder
 import savedata.record_pop as sav
 import user_problem.lem_upgrade as lem
-import user_problem.cebaf_dt_v0 as cav
+import user_problem.cebaf_dt_v1 as cav
 
 # # Choose the linac here
-linac = 'North' ## 'South' or 'North'
+linac = 'South' ## 'South' or 'North'
 random.seed()
 # plt.interactive(False)
 
 # create a folder under the current work directory to save data
 path = savedata.folder.create('nsga_II_reconstruction')
 
+
 # cavity table file
-file = 'data_prepare\\cebaf_cavity_table\\cavity_table.pkl'
+file = 'data_prepare\\cavity_table.pkl'
+file_q = 'data_prepare\\q_curves_south.pkl'
 
 # cavities = pd.read_pickle(file)
 # # Remove the constraints using death penalty
@@ -46,13 +48,13 @@ file = 'data_prepare\\cebaf_cavity_table\\cavity_table.pkl'
 
 
 ## Define the digitial twin    
-#cavities = cav.digitalTwin(file, linac)
+cavities = cav.digitalTwin(file, file_q, linac)
 
-# Define the cryomodule
-cryomodule = '1L06'
-energy_constraint = 31.8
-energy_margin = 0.2
-cavities = cav.cryoModule(file, cryomodule, energy_constraint, energy_margin)
+# # Define the cryomodule
+# cryomodule = '2L02'
+# energy_constraint = 31.8
+# energy_margin = 0.2
+# cavities = cav.cryoModule(file, file_q, cryomodule, energy_constraint, energy_margin)
 
 lem_prob = lem.prbl(cavities)
 

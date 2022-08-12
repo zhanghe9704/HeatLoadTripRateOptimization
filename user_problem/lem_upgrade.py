@@ -71,6 +71,10 @@ class lem_upgrade:
         self.heat_max = heat_max
         self.heat_load = 0
         self.A = -10.26813067
+        
+        self.c2 = cavities.getValues('c2')
+        self.c1 = cavities.getValues('c1')
+        self.c0 = cavities.getValues('c0')
     
     # """
     # The following function initialize the class using a cavity table, which
@@ -119,7 +123,10 @@ class lem_upgrade:
         fault_rate = np.sum(np.exp(self.A + fault[self.trip_slope > 0]))
         number_trips = 3600.0 * fault_rate
         self.number_trips = number_trips
-        heat_load = np.sum(1e12 * (x * x) * self.length / (self.Q * self.cnst))
+        
+        x_sqr = x * x
+        q = self.c2 * x_sqr + self.c1 * x + self.c0
+        heat_load = np.sum(1e12 * (x_sqr) * self.length / (q * self.cnst))
         self.heat_load = heat_load
         obj = [self.heat_load, self.number_trips]
         ci = []
@@ -158,7 +165,9 @@ class lem_upgrade:
 
     def calc_heat_load(self, xx):
         x = np.array(xx)
-        heat_load = np.sum(1e12 * (x * x) * self.length / (self.Q * self.cnst))
+        x_sqr = x * x
+        q = self.c2 * x_sqr + self.c1 * x + self.c0
+        heat_load = np.sum(1e12 * x_sqr * self.length / (q * self.cnst))
         return heat_load
 
     def calc_energy(self, xx):
