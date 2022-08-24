@@ -23,7 +23,7 @@ import user_problem.lem_upgrade as lem
 import user_problem.cebaf_dt_v1 as cav
 
 # # Choose the linac here
-linac = 'South' ## 'South' or 'North'
+linac = 'North' ## 'South' or 'North'
 random.seed()
 # plt.interactive(False)
 
@@ -33,7 +33,7 @@ path = savedata.folder.create('nsga_II_reconstruction')
 
 # cavity table file
 file = 'data_prepare\\cavity_table.pkl'
-file_q = 'data_prepare\\q_curves_south.pkl'
+file_q = 'data_prepare\\q_curves_'+linac.lower()+'.pkl'
 
 # cavities = pd.read_pickle(file)
 # # Remove the constraints using death penalty
@@ -48,13 +48,13 @@ file_q = 'data_prepare\\q_curves_south.pkl'
 
 
 ## Define the digitial twin    
-cavities = cav.digitalTwin(file, file_q, linac)
+# cavities = cav.digitalTwin(file, file_q, linac)
 
 # # Define the cryomodule
-# cryomodule = '2L02'
-# energy_constraint = 31.8
-# energy_margin = 0.2
-# cavities = cav.cryoModule(file, file_q, cryomodule, energy_constraint, energy_margin)
+cryomodule = '1L06'
+energy_constraint = 31.8
+energy_margin = 0.2
+cavities = cav.cryoModule(file, file_q, cryomodule, energy_constraint, energy_margin)
 
 lem_prob = lem.prbl(cavities)
 

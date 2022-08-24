@@ -126,6 +126,8 @@ class lem_upgrade:
         
         x_sqr = x * x
         q = self.c2 * x_sqr + self.c1 * x + self.c0
+        # q[q<=0] = 1e-41
+        q[q<=0] = -1*q[q<=0]
         heat_load = np.sum(1e12 * (x_sqr) * self.length / (q * self.cnst))
         self.heat_load = heat_load
         obj = [self.heat_load, self.number_trips]
@@ -167,7 +169,15 @@ class lem_upgrade:
         x = np.array(xx)
         x_sqr = x * x
         q = self.c2 * x_sqr + self.c1 * x + self.c0
+        # q[q<=0] = 1e-41
+        q[q<=0] = -1*q[q<=0]
         heat_load = np.sum(1e12 * x_sqr * self.length / (q * self.cnst))
+        return heat_load
+    
+    def calc_heat_load_const_q(self, xx):
+        x = np.array(xx)
+        x_sqr = x * x
+        heat_load = np.sum(1e12 * x_sqr * self.length / (self.Q * self.cnst))
         return heat_load
 
     def calc_energy(self, xx):
