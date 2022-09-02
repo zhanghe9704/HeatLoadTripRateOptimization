@@ -142,6 +142,81 @@ class lem_upgrade:
             print("Warning: Constraint number should be ONE, TWO, or THREE!")
         return obj + ci
 
+    def batch_fitness(self, prob, dvs) :
+        # print('Calling bfe!')
+        lv = len(self.length)
+        ldvs = len(dvs)
+        lp = int(ldvs/lv)
+        x = np.array(dvs).reshape(lp, lv)
+        diff_energy = np.fabs(np.sum(self.length*x,axis=1)-self.energy)
+        
+        death = diff_energy - self.energy_tol
+        
+        # diff_eneargy = np.fabs(np.sum(self.length * x) - self.energy)
+        
+        
+        # fault = self.trip_slope * (x - self.fault_grad)        
+        # fault_rate = np.sum(np.exp(self.A + fault[self.trip_slope > 0]))
+        # number_trips = 3600.0 * fault_rate
+        # self.number_trips = number_trips
+        
+        fault = self.trip_slope * (x - self.fault_grad)   
+        fault_rate = np.sum(np.exp(self.A + fault[:,self.trip_slope > 0]),axis=1)
+        number_trips = 3600.0 * fault_rate
+        
+        
+        # x_sqr = x * x
+        # q = self.c2 * x_sqr + self.c1 * x + self.c0
+        # # q[q<=0] = 1e-41
+        # q[q<=0] = -1*q[q<=0]
+        # heat_load = np.sum(1e12 * (x_sqr) * self.length / (q * self.cnst))
+        
+        x_sqr = x * x
+        q = self.c2 * x_sqr + self.c1 * x + self.c0
+        q = np.fabs(q)
+        heat_load = np.sum(1e12 * (x_sqr) * self.length / (q * self.cnst) ,axis=1)
+        
+        mask = death>0
+        number_trips[mask] = 1e6
+        heat_load[mask] = 1e6
+        
+        
+        # self.heat_load = heat_load
+        # obj = [self.heat_load, self.number_trips]
+        
+        obj = [heat_load, number_trips]
+        # ci = []
+        # if c_dim == 1:
+        #     ci = [diff_energy - self.energy_tol]
+        # elif c_dim == 2:
+        #     ci = [diff_energy - self.energy_tol, self.number_trips - self.trip_max]
+        # elif c_dim == 3:
+        #     ci = [diff_energy - self.energy_tol, self.number_trips - self.trip_max, self.heat_load - self.heat_max]
+        # else:
+        #     print("Warning: Constraint number should be ONE, TWO, or THREE!")
+        
+        
+        # ci = []
+        # if c_dim == 1:
+        #     ci = [(diff_energy - self.energy_tol)]
+        # elif c_dim == 2:
+        #     ci = [(diff_energy - self.energy_tol), (number_trips - self.trip_max)]
+        # elif c_dim == 3:
+        #     ci = [(diff_energy - self.energy_tol), (number_trips - self.trip_max), (heat_load - self.heat_max)]
+        # else:
+        #     print("Warning: Constraint number should be ONE, TWO, or THREE!")
+            
+        # res = np.array(obj+ci).T.reshape(lp*(c_dim+2))
+        
+        # res = [np.array(obj).T.reshape(lp*2), np.array(ci).T.reshape(lp*c_dim)]
+        res = np.array(obj).T.reshape(lp*2)
+        # print('heat: ', heat_load, 'trips:', number_trips)
+        # print('res:' , res)
+        return res
+    
+    def has_batch_fitness(self):
+        return True
+        
     def get_nobj(self):
         return 2
     

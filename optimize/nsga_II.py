@@ -8,7 +8,7 @@ from pygmo import algorithm, nsga2
 from savedata.record_pop import save_pop
 
 
-def opt(pop, ngen, path):
+def opt(pop, ngen, path, *arg):
     color = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
     if (isinstance(ngen, np.ndarray)):
         ngen = ngen.tolist()
@@ -21,6 +21,9 @@ def opt(pop, ngen, path):
     for i in range(len(n_gen)-1):
         # algo = algorithm.nsga_II(n_gen[i+1]-n_gen[i], m=0.01, cr = 0.95)
         algo = algorithm(nsga2(n_gen[i+1]-n_gen[i], m=0.01, cr = 0.95))
+        if len(arg)>0:
+            uda = algo.extract(nsga2)
+            uda.set_bfe(arg[0])
         start = time.time()
         pop = algo.evolve(pop)
         end = time.time()

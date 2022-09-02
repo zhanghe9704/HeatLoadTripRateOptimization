@@ -6,7 +6,7 @@ import time
 import sys
 import pandas as pd
 
-from pygmo import problem, population, unconstrain
+from pygmo import problem, population, unconstrain, bfe, member_bfe
 
 import optimize.nsga_II as algo
 # import optimize.nspso as algo
@@ -58,15 +58,24 @@ cavities = cav.cryoModule(file, file_q, cryomodule, energy_constraint, energy_ma
 
 lem_prob = lem.prbl(cavities)
 
+
+
     
 prob = problem(lem_prob)
 print('orignal problem:')
 print(prob)
 # prob_dth = problem.death_penalty(prob, problem.death_penalty.method.KURI)
-prob_dth = unconstrain(prob, method='kuri')  #'death penalty','kuri', 'weighted', 'ignore_c', 'ignore_o'
+prob_dth = problem(unconstrain(prob, method='death penalty')) #'death penalty','kuri', 'weighted', 'ignore_c', 'ignore_o'
 print('death penalty removed:')
 print(prob_dth)
 #
+
+b = bfe(lem_prob.batch_fitness)
+# b = bfe(member_bfe())  #member bfe not implemented for unconstrained problem
+
+
+# sys.exit()
+
 # Create original population
 pop_size = 128
 pop = population(prob_dth)
@@ -112,7 +121,8 @@ print("Initial pop plotted!")
 
 # # Run the optimizer for 30k generations and save the result
 n_gen = [30000]
-pop = algo.opt(pop, n_gen, path)
+# pop = algo.opt(pop, n_gen, path)
+pop = algo.opt(pop, n_gen, path, b)
 sav.save_pop('pop_nsga_II_30k.'+cavities.getName().lower(), pop)
 
 # # Load the saved result and plot
@@ -129,6 +139,10 @@ for e in f:
 plt.scatter(f0, f1, c='b', label=cavities.getName().upper()+' NSGA_II 30000')
 plt.legend()
 plt.grid()
+# plt.ylim(ymin=0)
+# plt.ylim(ymax=50)
+# plt.xlim(xymin=0)
+# plt.xlim(xmax=50)
 plt.savefig(cavities.getName().upper()+'_nsga_II_gen_30k.eps', format="eps")
 plt.show()
 
