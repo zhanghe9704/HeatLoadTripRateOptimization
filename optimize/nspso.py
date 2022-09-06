@@ -3,12 +3,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 
-from pygmo import algorithm
+from pygmo import algorithm,nspso
 
 from savedata.record_pop import save_pop
 
 
-def opt(pop, ngen, path):
+def opt(pop, ngen, path, *arg):
     color = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
     n_gen = [0] + ngen
     t = np.zeros(len(n_gen))
@@ -16,15 +16,27 @@ def opt(pop, ngen, path):
 
     plt.figure()
     for i in range(len(n_gen)-1):
-        algo = algorithm.nspso(gen=n_gen[i + 1] - n_gen[i], C1=2.4, C2=2.4,CHI=2.0, v_coeff=0.01)
+        algo = algorithm(nspso(gen=n_gen[i + 1] - n_gen[i],  c1=2.4, c2=2.4, chi=2.0, v_coeff=0.01))
+        if len(arg)>0:
+            uda = algo.extract(nspso)
+            uda.set_bfe(arg[0])
         start = time.time()
         pop = algo.evolve(pop)
         end = time.time()
         save_pop(path + '/pop_nspso_' + str(n_gen[i + 1]), pop)
         t[i+1] = end - start + t[i]
-        cur_f = np.array([ind.cur_f for ind in pop]).T
-        # np.save('cur_f_nsga_II_'+str(n_gen[i+1]), cur_f)
-        plt.scatter(cur_f[0], cur_f[1], c=color[i%6],
+        # cur_f = np.array([ind.cur_f for ind in pop]).T
+        # # np.save('cur_f_nsga_II_'+str(n_gen[i+1]), cur_f)
+        # plt.scatter(cur_f[0], cur_f[1], c=color[i%6],
+        #             label = 'n_gen = '+str(n_gen[i+1])+', t='+str(int(t[i+1]))+'s')
+        
+        f = pop.get_f()
+        f0 = []
+        f1 = []
+        for e in f:
+            f0.append(e[0])
+            f1.append(e[1])
+        plt.scatter(f0, f1, c=color[i%6],
                     label = 'n_gen = '+str(n_gen[i+1])+', t='+str(int(t[i+1]))+'s')
         plt.legend()
     # np.save('t_nsga_II', t)

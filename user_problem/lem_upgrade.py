@@ -1,12 +1,29 @@
 import numpy as np
+import cupy as cp
+from numba import jit, cuda
 import random
 from scipy import constants
 import csv
+from multiprocessing import Pool
 
 # from pygmo.problem import base
 
 from . import cavities_off
 
+
+def calc_fitness(x, length, energy, energy_tol, trip_slope, fault_grad, A, c2, c1, c0, cnst):
+    diff_energy = np.fabs(np.sum(length*x,axis=1)-energy)   
+    death = diff_energy - energy_tol
+           
+    fault = trip_slope * (x - fault_grad)   
+    fault_rate = np.sum(np.exp(A + fault[:,trip_slope > 0]),axis=1)
+    number_trips = 3600.0 * fault_rate
+    
+    x_sqr = x * x
+    q = c2 * x_sqr + c1 * x + c0
+    q = np.fabs(q)
+    heat_load = np.sum(1e12 * (x_sqr) * length / (q * cnst) ,axis=1)
+    return death, heat_load, number_trips
 
 # class lem_upgrade(base):
 class lem_upgrade:
@@ -141,7 +158,7 @@ class lem_upgrade:
         else:
             print("Warning: Constraint number should be ONE, TWO, or THREE!")
         return obj + ci
-
+ 
     def batch_fitness(self, prob, dvs) :
         # print('Calling bfe!')
         lv = len(self.length)
@@ -213,6 +230,108 @@ class lem_upgrade:
         # print('heat: ', heat_load, 'trips:', number_trips)
         # print('res:' , res)
         return res
+    
+    
+    
+    def calc_fitness(self, x):
+        diff_energy = np.fabs(np.sum(self.length*x,axis=1)-self.energy)   
+        death = diff_energy - self.energy_tol
+               
+        fault = self.trip_slope * (x - self.fault_grad)   
+        fault_rate = np.sum(np.exp(self.A + fault[:,self.trip_slope > 0]),axis=1)
+        number_trips = 3600.0 * fault_rate
+        
+        x_sqr = x * x
+        q = self.c2 * x_sqr + self.c1 * x + self.c0
+        q = np.fabs(q)
+        heat_load = np.sum(1e12 * (x_sqr) * self.length / (q * self.cnst) ,axis=1)
+        return death, heat_load, number_trips
+    
+    def calc_fitness_gpu(self, xx):
+        
+        x = cp.asarray(xx.astype('float32'))
+        length = cp.asarray(self.length.astype('float32'))
+        energy = cp.asarray(self.energy,dtype='float32')
+        energy_tol = cp.asarray(self.energy_tol, dtype='float32')
+        
+        death = cp.abs(cp.sum(length*x,axis=1)-energy) - energy_tol
+        death_cpu = cp.asnumpy(death).astype('float64')
+        
+        
+        # diff_energy = np.fabs(np.sum(self.length*x,axis=1)-self.energy)   
+        # death = diff_energy - self.energy_tol
+        
+        trip_slope = cp.asarray(self.trip_slope.astype('float32'))
+        fault_grad = cp.asarray(self.fault_grad.astype('float32'))
+        A = cp.asarray(self.A,dtype='float32')
+        
+        fault =  trip_slope * (x -  fault_grad)   
+        fault_rate = cp.sum(cp.exp(A + fault[:,trip_slope > 0]),axis=1)
+        number_trips = 3600.0 * fault_rate
+        number_trips_cpu = cp.asnumpy(number_trips).astype('float64')
+               
+        # fault = self.trip_slope * (x - self.fault_grad)   
+        # fault_rate = np.sum(np.exp(self.A + fault[:,self.trip_slope > 0]),axis=1)
+        # number_trips = 3600.0 * fault_rate
+        
+        c2 = cp.asarray(self.c2.astype('float32'))
+        c1 = cp.asarray(self.c1.astype('float32'))
+        c0 = cp.asarray(self.c0.astype('float32'))
+        cnst = cp.asarray(self.cnst.astype('float32'))
+        x_sqr = x * x
+        q = cp.abs(c2 * x_sqr + c1 * x + c0)
+        heat_load = cp.sum(1e12 * (x_sqr) * length / (q * cnst) ,axis=1)
+        heat_load_cpu = cp.asnumpy(heat_load).astype('float64')
+        
+        # x_sqr = x * x
+        # q = self.c2 * x_sqr + self.c1 * x + self.c0
+        # q = np.fabs(q)
+        # heat_load = np.sum(1e12 * (x_sqr) * self.length / (q * self.cnst) ,axis=1)
+        return death_cpu, heat_load_cpu, number_trips_cpu
+    
+    def batch_fitness_cpu(self, prob, dvs) :
+        lv = len(self.length)
+        ldvs = len(dvs)
+        lp = int(ldvs/lv)
+        x = np.array(dvs).reshape(lp, lv)
+        # p = Pool(4)
+        # death, heat_load, number_trips = p.map(self.calc_fitness,x)  
+        # death, heat_load, number_trips = self.calc_fitness(x) 
+        
+        death, heat_load, number_trips = calc_fitness(x, self.length, self.energy, self.energy_tol, 
+                self.trip_slope, self.fault_grad, self.A, self.c2, self.c1, self.c0, self.cnst)
+        
+        # death, heat_load, number_trips = p.map(calc_fitness, (x, self.length, self.energy, self.energy_tol, 
+        #         self.trip_slope, self.fault_grad, self.A, self.c2, self.c1, self.c0, self.cnst))
+        # p.close()
+        # p.join()
+        # p.terminate()
+        mask = death>0
+        number_trips[mask] = 1e6
+        heat_load[mask] = 1e6
+        
+        obj = [heat_load, number_trips]
+        
+        res = np.array(obj).T.reshape(lp*2)
+        return res
+    
+    def batch_fitness_gpu(self, prob, dvs) :
+        lv = len(self.length)
+        ldvs = len(dvs)
+        lp = int(ldvs/lv)
+        x = np.array(dvs).reshape(lp, lv)
+                
+        death, heat_load, number_trips = self.calc_fitness_gpu(x)
+        
+        mask = death>0
+        number_trips[mask] = 1e6
+        heat_load[mask] = 1e6
+        
+        obj = [heat_load, number_trips]
+        
+        res = np.array(obj).T.reshape(lp*2)
+        return res
+        
     
     def has_batch_fitness(self):
         return True

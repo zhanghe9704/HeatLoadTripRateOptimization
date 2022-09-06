@@ -8,7 +8,6 @@ from pygmo import population
 
 def save_pop(file_name, pop):
     pop_list = []
-    # for ind in pop:
     for ind in pop.get_x():
         pop_list = pop_list + [ind]
     with open(file_name, 'wb') as output:
