@@ -5,6 +5,7 @@ import random
 import time
 import sys
 import pandas as pd
+import copy
 
 from pygmo import problem, population, unconstrain, bfe, member_bfe
 
@@ -143,12 +144,16 @@ sys.exit()
 
 # # Turn off a few cavities and reconstruct the pareto_front
 n_off = 5
-lem_prob, idx_off = lem.revise_problem(n_off)  # New problem with less cavities
+
+lem_prob_new = copy.deepcopy(lem_prob)
+
+idx_off = lem.revise_problem(lem_prob_new, n_off)  # New problem with less cavities
 print('The following ', n_off, ' cavities are off: ', idx_off)
-prob_new = problem(lem_prob)
+
+prob_new = problem(lem_prob_new)
 print('problem with ', n_off, ' cavities off:')
 print(prob_new)
-prob_dth_new = unconstrain(prob_new, method='kuri')  #'death penalty','kuri', 'weighted', 'ignore_c', 'ignore_o'
+prob_dth_new = unconstrain(prob_new, method='death penalty')  #'death penalty','kuri', 'weighted', 'ignore_c', 'ignore_o'
 print('death penalty removed:')
 print(prob_dth_new)
 

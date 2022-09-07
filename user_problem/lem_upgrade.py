@@ -4,9 +4,9 @@ from numba import jit, cuda
 import random
 from scipy import constants
 import csv
-from multiprocessing import Pool
 
-# from pygmo.problem import base
+from random import sample
+
 
 from . import cavities_off
 
@@ -59,6 +59,7 @@ class lem_upgrade:
         self.c2 = cavities.getValues('c2')
         self.c1 = cavities.getValues('c1')
         self.c0 = cavities.getValues('c0')
+        self.dim = len(self.cavity_id)
     
     # """
     # The following function initialize the class using a cavity table, which
@@ -453,13 +454,31 @@ class lem_upgrade:
     
     def cavity_list(self):
         return self.cavity_id
+    
+    def dim(self):
+        return self.dim
+    
+    def remove_cavities(self, idx):
+        self.cavity_id = np.delete(self.cavity_id, idx)
+        self.Q = np.delete(self.Q, idx)
+        self.length = np.delete(self.length, idx)
+        self.trip_slope = np.delete(self.trip_slope, idx)
+        self.fault_grad = np.delete(self.fault_grad, idx)
+        self.energy = np.delete(self.energy, idx)
+        self.cnst = np.delete(self.cnst, idx)
+        self.range_low =np.delete(self.range_low, idx)
+        self.range_up = np.delete(self.range_up, idx)   
+        self.c2 = np.delete(self.c2, idx)
+        self.c1 = np.delete(self.c1, idx)
+        self.c0 = np.delete(self.c0, idx)
+        self.dim = len(self.cavity_id)
+        
 
-
-def revise_problem(n_off):
-    global dim
-    global data
-    (dim, data, id_down) = cavities_off.remove(dim, data, n_off)
-    return lem_upgrade(dim, c_dim, c_ineq_dim), id_down
+def revise_problem(prob, n_down):
+    id_down = sample(range(prob.dim),n_down)
+    id_down.sort()
+    prob.remove_cavities(id_down)
+    return id_down
 
 
 def prbl(cav):
