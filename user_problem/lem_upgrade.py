@@ -26,40 +26,7 @@ def calc_fitness(x, length, energy, energy_tol, trip_slope, fault_grad, A, c2, c
     return death, heat_load, number_trips
 
 # class lem_upgrade(base):
-class lem_upgrade:
-    def __init__(self, dim, c_dim, c_ineq_dim, total_energy = 1050, energy_tol = 2):
-    # def __init__(self):
-    #     super(lem_upgrade, self).__init__(dim, 0, 2, c_dim, c_ineq_dim, 0)
-        # self.d2 = data[:, 1]
-        self.Q = data[:, 5]
-        self.length = data[:, 6]
-        self.trip_slope = data[:, 4]
-        self.fault_grad = data[:, 3]
-        self.lowest_grad = 3.0-1e-5
-        self.energy = total_energy
-        self.cnst = np.empty(dim)
-        self.cnst.fill(968.0)
-        self.cnst[self.length == 0.5] = 960.0
-        # Set bounds
-        self.range_low = np.empty(dim)
-        self.range_low.fill(self.lowest_grad)
-        self.range_up = data[:, 1]
-        self.energy_tol =energy_tol
-        # self.length[self.length == 0.5] = constants.c/1.497e9*2.5
-        # self.length[self.length > 0.6] = constants.c/1.497e9*3.5
-
-        for idx, up in enumerate(self.range_up):
-            if up < self.lowest_grad:
-                self.range_up[idx] = self.lowest_grad
-        # self.set_bounds(self.range_low, self.range_up)
-        self.number_trips = 0
-        self.trip_max = trip_max
-        self.c_dim = c_dim
-        self.c_ineq_dim = c_ineq_dim
-        self.heat_max = heat_max
-        self.heat_load = 0
-        self.A = -10.26813067
-        
+class lem_upgrade:        
     def __init__(self, dim, c_dim, c_ineq_dim, cavities):
         self.cavity_id = cavities.list_cavities()
         self.Q = cavities.getValues('Q0')
@@ -169,24 +136,9 @@ class lem_upgrade:
         
         death = diff_energy - self.energy_tol
         
-        # diff_eneargy = np.fabs(np.sum(self.length * x) - self.energy)
-        
-        
-        # fault = self.trip_slope * (x - self.fault_grad)        
-        # fault_rate = np.sum(np.exp(self.A + fault[self.trip_slope > 0]))
-        # number_trips = 3600.0 * fault_rate
-        # self.number_trips = number_trips
-        
         fault = self.trip_slope * (x - self.fault_grad)   
         fault_rate = np.sum(np.exp(self.A + fault[:,self.trip_slope > 0]),axis=1)
         number_trips = 3600.0 * fault_rate
-        
-        
-        # x_sqr = x * x
-        # q = self.c2 * x_sqr + self.c1 * x + self.c0
-        # # q[q<=0] = 1e-41
-        # q[q<=0] = -1*q[q<=0]
-        # heat_load = np.sum(1e12 * (x_sqr) * self.length / (q * self.cnst))
         
         x_sqr = x * x
         q = self.c2 * x_sqr + self.c1 * x + self.c0
@@ -196,39 +148,11 @@ class lem_upgrade:
         mask = death>0
         number_trips[mask] = 1e6
         heat_load[mask] = 1e6
-        
-        
-        # self.heat_load = heat_load
-        # obj = [self.heat_load, self.number_trips]
-        
+               
         obj = [heat_load, number_trips]
-        # ci = []
-        # if c_dim == 1:
-        #     ci = [diff_energy - self.energy_tol]
-        # elif c_dim == 2:
-        #     ci = [diff_energy - self.energy_tol, self.number_trips - self.trip_max]
-        # elif c_dim == 3:
-        #     ci = [diff_energy - self.energy_tol, self.number_trips - self.trip_max, self.heat_load - self.heat_max]
-        # else:
-        #     print("Warning: Constraint number should be ONE, TWO, or THREE!")
-        
-        
-        # ci = []
-        # if c_dim == 1:
-        #     ci = [(diff_energy - self.energy_tol)]
-        # elif c_dim == 2:
-        #     ci = [(diff_energy - self.energy_tol), (number_trips - self.trip_max)]
-        # elif c_dim == 3:
-        #     ci = [(diff_energy - self.energy_tol), (number_trips - self.trip_max), (heat_load - self.heat_max)]
-        # else:
-        #     print("Warning: Constraint number should be ONE, TWO, or THREE!")
-            
-        # res = np.array(obj+ci).T.reshape(lp*(c_dim+2))
-        
-        # res = [np.array(obj).T.reshape(lp*2), np.array(ci).T.reshape(lp*c_dim)]
+
         res = np.array(obj).T.reshape(lp*2)
-        # print('heat: ', heat_load, 'trips:', number_trips)
-        # print('res:' , res)
+
         return res
     
     
@@ -251,7 +175,7 @@ class lem_upgrade:
         
         x = cp.asarray(xx.astype('float32'))
         length = cp.asarray(self.length.astype('float32'))
-        energy = cp.asarray(self.energy,dtype='float32')
+        energy = cp.asarray(self.energy, dtype='float32')
         energy_tol = cp.asarray(self.energy_tol, dtype='float32')
         
         death = cp.abs(cp.sum(length*x,axis=1)-energy) - energy_tol
@@ -294,18 +218,10 @@ class lem_upgrade:
         ldvs = len(dvs)
         lp = int(ldvs/lv)
         x = np.array(dvs).reshape(lp, lv)
-        # p = Pool(4)
-        # death, heat_load, number_trips = p.map(self.calc_fitness,x)  
-        # death, heat_load, number_trips = self.calc_fitness(x) 
         
         death, heat_load, number_trips = calc_fitness(x, self.length, self.energy, self.energy_tol, 
                 self.trip_slope, self.fault_grad, self.A, self.c2, self.c1, self.c0, self.cnst)
-        
-        # death, heat_load, number_trips = p.map(calc_fitness, (x, self.length, self.energy, self.energy_tol, 
-        #         self.trip_slope, self.fault_grad, self.A, self.c2, self.c1, self.c0, self.cnst))
-        # p.close()
-        # p.join()
-        # p.terminate()
+
         mask = death>0
         number_trips[mask] = 1e6
         heat_load[mask] = 1e6
@@ -545,29 +461,6 @@ def revise_problem(n_off):
     (dim, data, id_down) = cavities_off.remove(dim, data, n_off)
     return lem_upgrade(dim, c_dim, c_ineq_dim), id_down
 
-
-def nl():
-    global data
-    global lines
-    filename = 'lem_nl.csv'
-    # lines = np.loadtxt(filename, dtype='str', skiprows=1)  # load data as string, first row is the cavity name
-    lines = np.loadtxt(filename, dtype='str', delimiter=',', skiprows=1)  # load data as string, first row is the cavity name
-    data = lines[:, 1:8].astype('float64')
-    # nl = lem_upgrade()
-    nl = lem_upgrade(dim, c_dim, c_ineq_dim)
-    return nl
-
-
-def sl():
-    global data
-    global lines
-    filename = 'lem_sl.csv'
-    # lines = np.loadtxt(filename, dtype='str', skiprows=1)  # load data as string, first row is the cavity name
-    lines = np.loadtxt(filename, dtype='str', delimiter=',', skiprows=1)  # load data as string, first row is the cavity name
-    data = lines[:, 1:8].astype('float64')
-    # sl = lem_upgrade()
-    sl = lem_upgrade(dim, c_dim, c_ineq_dim)
-    return sl
 
 def prbl(cav):
     prbl = lem_upgrade(cav.getTotalCavityNumber(), c_dim, c_ineq_dim, cav)

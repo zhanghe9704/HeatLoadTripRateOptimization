@@ -9,14 +9,6 @@ import pandas as pd
 from pygmo import problem, population, unconstrain, bfe, member_bfe
 
 import optimize.nsga_II as algo
-# import optimize.nspso as algo
-# import optimize.sms_emoa as algo
-# import optimize.spea2 as algo
-# import algorithm_race.nsga_II as nsga_race
-# import algorithm_race.spea2 as spea2_race
-# import algorithm_race.sms_emoa as sms_emoa_race
-# import algorithm_race.nspso as nspso_race
-# import analysis.compare as cp
 import savedata.folder
 import savedata.record_pop as sav
 import user_problem.lem_upgrade as lem
@@ -31,10 +23,9 @@ random.seed()
 # create a folder under the current work directory to save data
 path = savedata.folder.create('nsga_II_reconstruction')
 
-
 # cavity table file
-file = 'data_prepare\\cavity_table.pkl'
-file_q = 'data_prepare\\q_curves_'+linac.lower()+'.pkl'
+file = 'user_problem\\cavity_table.pkl'
+file_q = 'user_problem\\q_curves_'+linac.lower()+'.pkl'
 
 # cavities = pd.read_pickle(file)
 # # Remove the constraints using death penalty
@@ -58,9 +49,6 @@ cavities = cav.digitalTwin(file, file_q, linac)
 # cavities = cav.cryoModule(file, file_q, cryomodule, energy_constraint, energy_margin)
 
 lem_prob = lem.prbl(cavities)
-
-
-
     
 prob = problem(lem_prob)
 print('orignal problem:')
@@ -74,9 +62,6 @@ print(prob_dth)
 b = bfe(lem_prob.batch_fitness_gpu)
 # b = bfe(lem_prob.batch_fitness)
 # b = bfe(member_bfe())  #member bfe not implemented for unconstrained problem
-
-
-# sys.exit()
 
 # Create original population
 pop_size = 128
@@ -124,11 +109,10 @@ print("Initial pop plotted!")
 # print(lem_prob.calc_number_trips(x))
 
 # # Run the optimizer for 30k generations and save the result
-n_gen = [10000]
-pop = algo.opt(pop, n_gen, path)
-# pop = algo.opt(pop, n_gen, path, b)
+n_gen = [30000]
+# pop = algo.opt(pop, n_gen, path)
+pop = algo.opt(pop, n_gen, path, b)
 sav.save_pop('pop_nsga_II_'+str(n_gen[-1])+'_'+cavities.getName().lower(), pop)
-print('pop_nsga_II_'+str(n_gen[-1])+'_'+cavities.getName().lower())
 print('pop_nsga_II_'+str(n_gen[-1])+'_'+cavities.getName().lower())
 
 # # Load the saved result and plot
@@ -143,7 +127,7 @@ for e in f:
     f0.append(e[0])
     f1.append(e[1])
 
-print('nsga2: ', f0,f1)
+# print('nsga2: ', f0,f1)
 plt.scatter(f0, f1, c='b', label=cavities.getName().upper()+' NSGA_II '+str(n_gen[-1]))
 plt.legend()
 plt.grid()
