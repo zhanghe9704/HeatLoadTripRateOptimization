@@ -60,8 +60,8 @@ print('death penalty removed:')
 print(prob_dth)
 #
 
-b = bfe(lem_prob.batch_fitness_gpu)
-# b = bfe(lem_prob.batch_fitness)
+# b = bfe(lem_prob.batch_fitness_gpu)
+b = bfe(lem_prob.batch_fitness)
 # b = bfe(member_bfe())  #member bfe not implemented for unconstrained problem
 
 # Create original population
@@ -140,7 +140,7 @@ plt.savefig(cavities.getName().upper()+'_nsga_II_gen_'+str(n_gen[-1])+'.eps', fo
 plt.show()
 
 
-sys.exit()
+# sys.exit()
 
 # # Turn off a few cavities and reconstruct the pareto_front
 n_off = 5
@@ -153,18 +153,18 @@ print('The following ', n_off, ' cavities are off: ', idx_off)
 prob_new = problem(lem_prob_new)
 print('problem with ', n_off, ' cavities off:')
 print(prob_new)
-prob_dth_new = unconstrain(prob_new, method='death penalty')  #'death penalty','kuri', 'weighted', 'ignore_c', 'ignore_o'
+prob_dth_new = problem(unconstrain(prob_new, method='death penalty'))  #'death penalty','kuri', 'weighted', 'ignore_c', 'ignore_o'
 print('death penalty removed:')
 print(prob_dth_new)
 
 # # Load previous result for the original problem
 pop_org = population(prob_dth)
-sav.load_pop('pop_nsga_II_'+str(n_gen[-1])+linac.lower(), pop_org)
+sav.load_pop('pop_nsga_II_'+str(n_gen[-1])+'_'+cavities.getName().lower(), pop_org)
 # # Delete the off cavities and use as initial population for the new problem
 pop_new = population(prob_dth_new)
 for ind in pop_org.get_x():
     x = np.delete(ind, idx_off)
-    lem_prob.recreate_pop_dpdg_sqr(x)
+    lem_prob_new.recreate_pop_dpdg_sqr(x)
     pop_new.push_back(x)
 # # # We could also add a few individuals with low trip rate to lead the optimization to the low trip rate region
 # for i in range(4):
@@ -177,8 +177,9 @@ for ind in pop_org.get_x():
 # x = lem_prob.adjust_gradient(x)
 # pop_new.push_back(x)
 
+b = bfe(lem_prob_new.batch_fitness)
 n_gen = [200, 500, 1000, 2000, 3000]
-pop_new = algo.opt(pop_new, n_gen, path)
+pop_new = algo.opt(pop_new, n_gen, path, b)
 
 # # Add the off cavities back with zero gradients
 pop_recon = population(prob_dth)

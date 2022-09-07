@@ -8,9 +8,6 @@ import csv
 from random import sample
 
 
-from . import cavities_off
-
-
 def calc_fitness(x, length, energy, energy_tol, trip_slope, fault_grad, A, c2, c1, c0, cnst):
     diff_energy = np.fabs(np.sum(length*x,axis=1)-energy)   
     death = diff_energy - energy_tol
@@ -464,7 +461,6 @@ class lem_upgrade:
         self.length = np.delete(self.length, idx)
         self.trip_slope = np.delete(self.trip_slope, idx)
         self.fault_grad = np.delete(self.fault_grad, idx)
-        self.energy = np.delete(self.energy, idx)
         self.cnst = np.delete(self.cnst, idx)
         self.range_low =np.delete(self.range_low, idx)
         self.range_up = np.delete(self.range_up, idx)   
