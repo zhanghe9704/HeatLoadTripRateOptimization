@@ -1,6 +1,5 @@
 import numpy as np
 import cupy as cp
-from numba import jit, cuda
 import random
 from scipy import constants
 import csv

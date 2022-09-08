@@ -60,8 +60,8 @@ print('death penalty removed:')
 print(prob_dth)
 #
 
-# b = bfe(lem_prob.batch_fitness_gpu)
-b = bfe(lem_prob.batch_fitness)
+b = bfe(lem_prob.batch_fitness_gpu)
+# b = bfe(lem_prob.batch_fitness)
 # b = bfe(member_bfe())  #member bfe not implemented for unconstrained problem
 
 # Create original population
