@@ -6,21 +6,6 @@ import csv
 
 from random import sample
 
-
-def calc_fitness(x, length, energy, energy_tol, trip_slope, fault_grad, A, c2, c1, c0, cnst):
-    diff_energy = np.fabs(np.sum(length*x,axis=1)-energy)   
-    death = diff_energy - energy_tol
-           
-    fault = trip_slope * (x - fault_grad)   
-    fault_rate = np.sum(np.exp(A + fault[:,trip_slope > 0]),axis=1)
-    number_trips = 3600.0 * fault_rate
-    
-    x_sqr = x * x
-    q = c2 * x_sqr + c1 * x + c0
-    q = np.fabs(q)
-    heat_load = np.sum(1e12 * (x_sqr) * length / (q * cnst) ,axis=1)
-    return death, heat_load, number_trips
-
 # class lem_upgrade(base):
 class lem_upgrade:        
     def __init__(self, dim, c_dim, c_ineq_dim, cavities):
@@ -123,7 +108,35 @@ class lem_upgrade:
             print("Warning: Constraint number should be ONE, TWO, or THREE!")
         return obj + ci
  
-    def batch_fitness(self, prob, dvs) :
+    def batch_fitness(self, dvs) :
+        # print('Calling bfe!')
+        lv = len(self.length)
+        ldvs = len(dvs)
+        lp = int(ldvs/lv)
+        x = np.array(dvs).reshape(lp, lv)
+        diff_energy = np.fabs(np.sum(self.length*x,axis=1)-self.energy)
+        
+        death = diff_energy - self.energy_tol
+        
+        fault = self.trip_slope * (x - self.fault_grad)   
+        fault_rate = np.sum(np.exp(self.A + fault[:,self.trip_slope > 0]),axis=1)
+        number_trips = 3600.0 * fault_rate
+        
+        x_sqr = x * x
+        q = self.c2 * x_sqr + self.c1 * x + self.c0
+        q = np.fabs(q)
+        heat_load = np.sum(1e12 * (x_sqr) * self.length / (q * self.cnst) ,axis=1)
+        
+        mask = death>0
+        number_trips[mask] = 1e6
+        heat_load[mask] = 1e6
+               
+        obj = [heat_load, number_trips]
+
+        res = np.array(obj).T.reshape(lp*2)
+        return res
+    
+    def batch_fitness_cpu(self, prob, dvs) :
         # print('Calling bfe!')
         lv = len(self.length)
         ldvs = len(dvs)
@@ -150,9 +163,7 @@ class lem_upgrade:
 
         res = np.array(obj).T.reshape(lp*2)
 
-        return res
-    
-    
+        return res    
     
     def calc_fitness(self, x):
         diff_energy = np.fabs(np.sum(self.length*x,axis=1)-self.energy)   
@@ -210,23 +221,6 @@ class lem_upgrade:
         # heat_load = np.sum(1e12 * (x_sqr) * self.length / (q * self.cnst) ,axis=1)
         return death_cpu, heat_load_cpu, number_trips_cpu
     
-    def batch_fitness_cpu(self, prob, dvs) :
-        lv = len(self.length)
-        ldvs = len(dvs)
-        lp = int(ldvs/lv)
-        x = np.array(dvs).reshape(lp, lv)
-        
-        death, heat_load, number_trips = calc_fitness(x, self.length, self.energy, self.energy_tol, 
-                self.trip_slope, self.fault_grad, self.A, self.c2, self.c1, self.c0, self.cnst)
-
-        mask = death>0
-        number_trips[mask] = 1e6
-        heat_load[mask] = 1e6
-        
-        obj = [heat_load, number_trips]
-        
-        res = np.array(obj).T.reshape(lp*2)
-        return res
     
     def batch_fitness_gpu(self, prob, dvs) :
         lv = len(self.length)

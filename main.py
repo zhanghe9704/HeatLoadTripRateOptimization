@@ -26,6 +26,7 @@ path = savedata.folder.create('nsga_II_reconstruction')
 
 # cavity table file
 file = 'user_problem\\cavity_table.pkl'
+# q curve file
 file_q = 'user_problem\\q_curves_'+linac.lower()+'.pkl'
 
 # cavities = pd.read_pickle(file)
@@ -61,10 +62,10 @@ print(prob_dth)
 #
 
 b = bfe(lem_prob.batch_fitness_gpu)
-# b = bfe(lem_prob.batch_fitness)
+# b = bfe(lem_prob.batch_fitness_cpu)
 # b = bfe(member_bfe())  #member bfe not implemented for unconstrained problem
 
-# Create original population
+# Create initial population
 pop_size = 128
 pop = population(prob_dth)
 dim = prob.get_nx()
@@ -177,7 +178,7 @@ for ind in pop_org.get_x():
 # x = lem_prob.adjust_gradient(x)
 # pop_new.push_back(x)
 
-b = bfe(lem_prob_new.batch_fitness)
+b = bfe(lem_prob_new.batch_fitness_cpu)
 n_gen = [200, 500, 1000, 2000, 3000]
 pop_new = algo.opt(pop_new, n_gen, path, b)
 
