@@ -199,13 +199,17 @@ class digitalTwin():
     """
 
     """
-    def __init__(self, path_cavity_data, path_q_data, linac="North"):
+    def __init__(self, path_cavity_data, path_q_data='', linac="North"):
         """
 
         :param path_cavity_data:
         """
         data = pd.read_pickle(path_cavity_data)
-        q_curves = pd.read_pickle(path_q_data)
+        q_curves = pd.DataFrame()
+        if path_q_data == '':
+            q_curves["cavity_id"] = []
+        else:
+            q_curves = pd.read_pickle(path_q_data)
         cavity_ids = data["cavity_id"]
         self.cavities = []
         self.cavity_order = []

@@ -16,7 +16,7 @@ import user_problem.lem_upgrade as lem
 import user_problem.cebaf_dt_v1 as cav
 
 # # Choose the linac here
-linac = 'North' ## 'South' or 'North'
+linac = 'South' ## 'South' or 'North'
 # random.seed(1)
 random.seed()
 # plt.interactive(False)
@@ -27,7 +27,8 @@ path = savedata.folder.create('nsga_II_reconstruction')
 # cavity table file
 file = 'user_problem\\cavity_table.pkl'
 # q curve file
-file_q = 'user_problem\\q_curves_'+linac.lower()+'.pkl'
+# file_q = 'user_problem\\q_curves_'+linac.lower()+'.pkl'
+# file_q = ''
 
 # cavities = pd.read_pickle(file)
 # # Remove the constraints using death penalty
@@ -42,7 +43,8 @@ file_q = 'user_problem\\q_curves_'+linac.lower()+'.pkl'
 
 
 ## Define the digitial twin    
-cavities = cav.digitalTwin(file, file_q, linac)
+# cavities = cav.digitalTwin(file, file_q, linac)
+cavities = cav.digitalTwin(file, linac=linac)
 
 # # Define the cryomodule
 # cryomodule = '1L06'
@@ -56,13 +58,13 @@ prob = problem(lem_prob)
 print('orignal problem:')
 print(prob)
 # prob_dth = problem.death_penalty(prob, problem.death_penalty.method.KURI)
-prob_dth = problem(unconstrain(prob, method='death penalty')) #'death penalty','kuri', 'weighted', 'ignore_c', 'ignore_o'
+prob_dth = problem(unconstrain(prob, method='kuri')) #'death penalty','kuri', 'weighted', 'ignore_c', 'ignore_o'
 print('death penalty removed:')
 print(prob_dth)
 #
 
-b = bfe(lem_prob.batch_fitness_gpu)
-# b = bfe(lem_prob.batch_fitness_cpu)
+# b = bfe(lem_prob.batch_fitness_gpu)
+b = bfe(lem_prob.batch_fitness_cpu)
 # b = bfe(member_bfe())  #member bfe not implemented for unconstrained problem
 
 # Create initial population
@@ -83,6 +85,8 @@ for e in f:
     f1.append(e[1])
 plt.figure()
 plt.scatter(f0, f1, c='b', label=cavities.getName().upper()+' Initial Pop')
+plt.ylabel("Trip Rate [per hour]")
+plt.xlabel("Heat Load [W]")
 plt.legend()
 plt.grid()
 plt.savefig(cavities.getName().upper()+'_nsga_II_gen_ip.eps', format="eps")
@@ -131,6 +135,8 @@ for e in f:
 
 # print('nsga2: ', f0,f1)
 plt.scatter(f0, f1, c='b', label=cavities.getName().upper()+' NSGA_II '+str(n_gen[-1]))
+plt.ylabel("Trip Rate [per hour]")
+plt.xlabel("Heat Load [W]")
 plt.legend()
 plt.grid()
 # plt.ylim(ymin=0)
@@ -144,7 +150,7 @@ plt.show()
 # sys.exit()
 
 # # Turn off a few cavities and reconstruct the pareto_front
-n_off = 5
+n_off = 10
 
 lem_prob_new = copy.deepcopy(lem_prob)
 

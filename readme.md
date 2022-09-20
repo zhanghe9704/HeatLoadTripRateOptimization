@@ -7,7 +7,6 @@ This package includes the python files that optimize the heat load and the trip 
 ## List of files
 
 ```
-
 .
 ├── optimize/
 │   ├── __init__.py
@@ -18,11 +17,9 @@ This package includes the python files that optimize the heat load and the trip 
 │   └── record_pop.py
 ├── user_problem/
 │   ├── __init__.py
-│   ├── cebaf_dt_v0.py
 │   ├── cebaf_dt_v1.py
 │   └── lem_upgrad.py
 └── main.py
-
 ```
 
 optimize/nsga_II.py - This is a wrapped nsga_II optimizer from pygmo. One important difference comparing with the original one is this one takes a list of numbers for the number of generations instead of just one number. It plots the pareto-front for each of the number in the list ans shows each time cost in the legend of the plot. 
@@ -31,13 +28,9 @@ savedata/folder.py - Create a folder with time stamp and optimizer name.
 
 savedata/record_pop.py - Save and load a population.
 
-user_problem/cebaf_dt_v0.py - Digital twin of CEBAF with constant Q0. 
-
-user_problem/cebaf_dt_v1.py - Digital twin of CEBAF with Q0 function as 2nd order polynomials. 
+user_problem/cebaf_dt_v1.py - Digital twin of CEBAF with either constant Q0s or  Q0 functions as 2nd order polynomials. 
 
 user_problem/lem_upgrad.py - Define the problem. 
-
-
 
 ## How to use the code
 
@@ -55,8 +48,6 @@ import user_problem.lem_upgrade as lem
 import user_problem.cebaf_dt_v1 as cav
 ```
 
-
-
 ### 1. Create the linac
 
 First we need to select the "North" linac or the "South" linac. Then we need to tell the name of the file that saves the cavity parameters and the name of the file that saves the q curves. With these three arguments, 
@@ -72,6 +63,24 @@ file_q = 'user_problem\\q_curves_'+linac.lower()+'.pkl'
 
 ## Define the digital twin    
 cavities = cav.digitalTwin(file, file_q, linac)
+
+```
+
+To define a digital twin with constant Q0, we can using the following code:
+
+```
+# Use empty string as the q curve file name 
+file_q = ''
+
+## Define the digital twin    
+cavities = cav.digitalTwin(file, file_q, linac)
+```
+
+Or just omit the argument and set the following argument by name:
+
+```
+## Define the digital twin    
+cavities = cav.digitalTwin(file, linac = linac)
 ```
 
 
@@ -90,8 +99,6 @@ prob = problem(lem_prob)
 # Remove the constraints for the nsga_II optimizer 
 prob_dth = problem(unconstrain(prob, method='death penalty')) b)
 ```
-
-
 
 ### 3. Run optimization
 
@@ -120,8 +127,6 @@ Computation of the fitness function is the bottleneck for efficiency. We can use
 b = bfe(lem_prob.batch_fitness_gpu)  # Batch fitness function on GPU
 pop = algo.opt(pop, n_gen, path, b)
 ```
-
-
 
 ### 4. Turn off a few cavities and reconstruct the pareto-front
 
@@ -166,10 +171,4 @@ for ind in pop_new.get_x():
     for idx in idx_off:
         ind = np.insert(ind, idx, 0)
     pop_recon.push_back(ind)
-
-
 ```
-
-
-
-

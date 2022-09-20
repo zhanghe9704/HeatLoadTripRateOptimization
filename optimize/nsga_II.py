@@ -46,7 +46,7 @@ def opt(pop, ngen, path, *arg):
                     label = 'n_gen = '+str(n_gen[i+1])+', t='+str(int(t[i+1]))+'s')
         plt.legend()
     # np.save('t_nsga_II', t)
-    plt.ylim(ymin=0)
+    # plt.ylim(ymin=0)
     # if (cur_f[1].max()>50):
     #     plt.ylim(ymax=50)
     if (max(f1)>50):
