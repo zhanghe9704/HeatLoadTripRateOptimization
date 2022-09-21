@@ -422,7 +422,11 @@ class cryoModule(digitalTwin):
             
         """
         data = pd.read_pickle(path_cavity_data)
-        q_curves = pd.read_pickle(path_q_data)
+        q_curves = pd.DataFrame()
+        if path_q_data == '':
+            q_curves["cavity_id"] = []
+        else:
+            q_curves = pd.read_pickle(path_q_data)
         module = data[data['cavity_id'].str.contains(cryomodule)]
         if module.empty:
             raise ValueError("Cryomodule not found!")

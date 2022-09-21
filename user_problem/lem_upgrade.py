@@ -5,6 +5,7 @@ from scipy import constants
 import csv
 
 from random import sample
+from multipledispatch import dispatch
 
 # class lem_upgrade(base):
 class lem_upgrade:        
@@ -462,9 +463,16 @@ class lem_upgrade:
         self.c0 = np.delete(self.c0, idx)
         self.dim = len(self.cavity_id)
         
-
+@dispatch(lem_upgrade, int)
 def revise_problem(prob, n_down):
     id_down = sample(range(prob.dim),n_down)
+    id_down.sort()
+    prob.remove_cavities(id_down)
+    return id_down
+
+@dispatch(lem_upgrade, list)
+def revise_problem(prob, n_down):
+    id_down = n_down
     id_down.sort()
     prob.remove_cavities(id_down)
     return id_down

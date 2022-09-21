@@ -16,7 +16,7 @@ import user_problem.lem_upgrade as lem
 import user_problem.cebaf_dt_v1 as cav
 
 # # Choose the linac here
-linac = 'South' ## 'South' or 'North'
+linac = 'North' ## 'South' or 'North'
 # random.seed(1)
 random.seed()
 # plt.interactive(False)
@@ -28,7 +28,7 @@ path = savedata.folder.create('nsga_II_reconstruction')
 file = 'user_problem\\cavity_table.pkl'
 # q curve file
 # file_q = 'user_problem\\q_curves_'+linac.lower()+'.pkl'
-# file_q = ''
+file_q = ''
 
 # cavities = pd.read_pickle(file)
 # # Remove the constraints using death penalty
@@ -43,14 +43,14 @@ file = 'user_problem\\cavity_table.pkl'
 
 
 ## Define the digitial twin    
-# cavities = cav.digitalTwin(file, file_q, linac)
-cavities = cav.digitalTwin(file, linac=linac)
+cavities = cav.digitalTwin(file, file_q, linac)
+# cavities = cav.digitalTwin(file, linac=linac)
 
 # # Define the cryomodule
-# cryomodule = '1L06'
-# energy_constraint = 31.8
-# energy_margin = 0.2
-# cavities = cav.cryoModule(file, file_q, cryomodule, energy_constraint, energy_margin)
+cryomodule = '1L06'
+energy_constraint = 31.8
+energy_margin = 0.2
+cavities = cav.cryoModule(file, file_q, cryomodule, energy_constraint, energy_margin)
 
 lem_prob = lem.prbl(cavities)
     
@@ -116,7 +116,7 @@ print("Initial pop plotted!")
 
 # # Run the optimizer for 30k generations and save the result
 n_gen = [30000]
-# pop = algo.opt(pop, n_gen, path)
+# # pop = algo.opt(pop, n_gen, path)
 pop = algo.opt(pop, n_gen, path, b)
 sav.save_pop('pop_nsga_II_'+str(n_gen[-1])+'_'+cavities.getName().lower(), pop)
 print('pop_nsga_II_'+str(n_gen[-1])+'_'+cavities.getName().lower())
@@ -147,14 +147,15 @@ plt.savefig(cavities.getName().upper()+'_nsga_II_gen_'+str(n_gen[-1])+'.eps', fo
 plt.show()
 
 
-# sys.exit()
+sys.exit()
 
 # # Turn off a few cavities and reconstruct the pareto_front
-n_off = 10
+n_off = 5
 
 lem_prob_new = copy.deepcopy(lem_prob)
 
 idx_off = lem.revise_problem(lem_prob_new, n_off)  # New problem with less cavities
+# idx_off = lem.revise_problem(lem_prob_new,  [2, 10, 11, 33, 40, 60, 124, 186, 191, 199]) 
 print('The following ', n_off, ' cavities are off: ', idx_off)
 
 prob_new = problem(lem_prob_new)
@@ -174,14 +175,14 @@ for ind in pop_org.get_x():
     lem_prob_new.recreate_pop_dpdg_sqr(x)
     pop_new.push_back(x)
 # # # We could also add a few individuals with low trip rate to lead the optimization to the low trip rate region
-# for i in range(4):
-#     x = lem_prob.trip_rate_opt(i*0.5)
-#     x = lem_prob.adjust_gradient(x)
-#     pop_new.push_back(x)
+for i in range(4):
+    x = lem_prob_new.trip_rate_opt(i*0.5)
+    x = lem_prob_new.adjust_gradient(x)
+    pop_new.push_back(x)
     
 # # # We could also add a few individuals with low heat load to lead the optimization to the low heat load region   
-# x = lem_prob.heat_load_opt()
-# x = lem_prob.adjust_gradient(x)
+# x = lem_prob_new.heat_load_opt()
+# x = lem_prob_new.adjust_gradient(x)
 # pop_new.push_back(x)
 
 b = bfe(lem_prob_new.batch_fitness_cpu)
@@ -194,3 +195,9 @@ for ind in pop_new.get_x():
     for idx in idx_off:
         ind = np.insert(ind, idx, 0)
     pop_recon.push_back(ind)
+
+cav_off = []
+for i in idx_off:
+    cav_off.append(lem_prob.cavity_id[i])
+print(idx_off)
+print(cav_off)
